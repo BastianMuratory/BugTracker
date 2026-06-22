@@ -119,6 +119,50 @@
 
   /* ----------------------------------------------------- Glisser-déposer */
   let dragged = null;
+  let lastHoverCol = null;
+
+  function clearDragHighlights() {
+    board.querySelectorAll(".col-body.drag-over").forEach(function (b) {
+      b.classList.remove("drag-over");
+    });
+    board.querySelectorAll(".column.drag-over-collapsed").forEach(function (c) {
+      c.classList.remove("drag-over-collapsed");
+    });
+    lastHoverCol = null;
+  }
+
+  /* --------------------------------- Défilement auto pendant le survol --- */
+  // Quand le curseur approche du bord gauche/droit du tableau, on le fait
+  // défiler en continu : indispensable pour déposer une carte dans une
+  // colonne hors écran quand il y a beaucoup de projets.
+  const AUTOSCROLL_EDGE = 80;   // zone sensible, en px, depuis chaque bord
+  const AUTOSCROLL_SPEED = 18;  // vitesse max, en px par image
+  let scrollVX = 0;
+  let scrollRAF = null;
+
+  function autoScrollStep() {
+    if (scrollVX === 0) { scrollRAF = null; return; }
+    board.scrollLeft += scrollVX;
+    scrollRAF = requestAnimationFrame(autoScrollStep);
+  }
+
+  function updateAutoScroll(e) {
+    const rect = board.getBoundingClientRect();
+    const distLeft = e.clientX - rect.left;
+    const distRight = rect.right - e.clientX;
+    let vx = 0;
+    if (e.clientX <= rect.left) vx = -AUTOSCROLL_SPEED;
+    else if (e.clientX >= rect.right) vx = AUTOSCROLL_SPEED;
+    else if (distLeft < AUTOSCROLL_EDGE) vx = -AUTOSCROLL_SPEED * (1 - distLeft / AUTOSCROLL_EDGE);
+    else if (distRight < AUTOSCROLL_EDGE) vx = AUTOSCROLL_SPEED * (1 - distRight / AUTOSCROLL_EDGE);
+    scrollVX = vx;
+    if (vx !== 0 && !scrollRAF) scrollRAF = requestAnimationFrame(autoScrollStep);
+  }
+
+  function stopAutoScroll() {
+    scrollVX = 0;
+    if (scrollRAF) { cancelAnimationFrame(scrollRAF); scrollRAF = null; }
+  }
 
   board.addEventListener("dragstart", function (e) {
     const card = e.target.closest(".bcard");
@@ -134,38 +178,49 @@
   board.addEventListener("dragend", function () {
     if (dragged) dragged.classList.remove("dragging");
     dragged = null;
-    board.querySelectorAll(".col-body.drag-over").forEach(function (b) {
-      b.classList.remove("drag-over");
-    });
+    clearDragHighlights();
+    stopAutoScroll();
   });
 
   board.addEventListener("dragover", function (e) {
-    const body = e.target.closest(".col-body");
-    if (!body || !dragged) return;
-    const col = body.closest(".column");
+    if (!dragged) return;
+    updateAutoScroll(e);
+    // La cible est la colonne entière (et non plus seulement son corps), pour
+    // pouvoir déposer une carte même quand la colonne est réduite (corps masqué).
+    const col = e.target.closest(".column");
+    if (!col) return;
     // Sur une colonne fixe typée (Bugs / Feature non assignée), n'autorise le
     // dépôt que si la nature de la carte correspond : sinon on ne preventDefault
     // pas, ce qui interdit le drop et affiche le curseur « interdit ».
     if (!canDropIn(dragged, col)) return;
     e.preventDefault();
     if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
-    body.classList.add("drag-over");
+    if (col !== lastHoverCol) {
+      clearDragHighlights();
+      lastHoverCol = col;
+      if (col.classList.contains("collapsed")) col.classList.add("drag-over-collapsed");
+      else bodyOf(col).classList.add("drag-over");
+    }
   });
 
   board.addEventListener("dragleave", function (e) {
-    const body = e.target.closest(".col-body");
-    if (!body) return;
-    // ne retire le surlignage que si on quitte réellement la zone
-    if (!body.contains(e.relatedTarget)) body.classList.remove("drag-over");
+    const col = e.target.closest(".column");
+    if (!col) return;
+    // ne retire le surlignage que si on quitte réellement la colonne
+    if (!col.contains(e.relatedTarget)) {
+      bodyOf(col).classList.remove("drag-over");
+      col.classList.remove("drag-over-collapsed");
+      if (lastHoverCol === col) lastHoverCol = null;
+    }
   });
 
   board.addEventListener("drop", function (e) {
-    const body = e.target.closest(".col-body");
-    if (!body || !dragged) return;
+    const targetCol = e.target.closest(".column");
+    if (!targetCol || !dragged) return;
     e.preventDefault();
-    body.classList.remove("drag-over");
-    const targetCol = body.closest(".column");
-    if (!targetCol || dragged.closest(".column") === targetCol) return;
+    clearDragHighlights();
+    stopAutoScroll();
+    if (dragged.closest(".column") === targetCol) return;
     if (!canDropIn(dragged, targetCol)) {
       const kind = dragged.getAttribute("data-kind") === "feature" ? "Les features" : "Les bugs";
       showToast(kind + " ne peuvent pas aller dans cette colonne.", "error");

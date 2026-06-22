@@ -596,6 +596,7 @@ input.nas { font-family: var(--mono); font-size: .86rem; }
 .column.collapsed .col-title { flex-direction: column; }
 .column.collapsed .col-actions { flex-direction: column; }
 .column.collapsed .col-collapse svg { transform: rotate(180deg); }
+.column.drag-over-collapsed { background: var(--accent-soft); box-shadow: inset 0 0 0 2px var(--accent); }
 .add-col { align-self: flex-start; }
 .col-head {
   display: flex;
