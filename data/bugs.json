@@ -5,7 +5,10 @@
   "projects": [
     "Patch 1.2",
     "Release 1.1",
-    "Release 1.0"
+    "Release 1.0",
+    "a",
+    "z",
+    "s"
   ],
   "archived_projects": [
     "Relase de l'enfer"
@@ -45,7 +48,7 @@
         }
       ],
       "created_at": "2026-06-19T06:35:41+00:00",
-      "updated_at": "2026-06-19T06:35:41+00:00",
+      "updated_at": "2026-06-22T22:09:43+00:00",
       "images": [],
       "nas_link": "\\\\nas\\bugs\\BUG-001\\log_0512.txt",
       "kind": "bug",
@@ -128,7 +131,7 @@
       "keywords": [
         "Freeze"
       ],
-      "description": "ecran freeze",
+      "description": "ecran freezes",
       "observed_behavior": "ecran freeze",
       "expected_behavior": "ecran freeze pas",
       "conditions": "???",
@@ -144,18 +147,18 @@
       ],
       "id": "BUG-005",
       "created_at": "2026-06-19T09:06:17+00:00",
-      "updated_at": "2026-06-22T21:43:24+00:00",
+      "updated_at": "2026-06-22T21:55:29+00:00",
       "images": [
         "90dc6c267a5b4f86b548d9264736875b.jpg"
       ],
       "nas_link": "",
       "kind": "bug",
       "criteria": {
-        "product_importance": 0,
+        "product_importance": 3,
         "be_importance": 5,
-        "users_impacted": 0,
-        "urgency": 0,
-        "tech_effort": 0
+        "users_impacted": 4,
+        "urgency": 3,
+        "tech_effort": 5
       }
     },
     {
@@ -203,7 +206,7 @@
       "id": "FEAT-002",
       "images": [],
       "created_at": "2026-06-22T16:57:13+00:00",
-      "updated_at": "2026-06-22T21:32:27+00:00",
+      "updated_at": "2026-06-22T21:55:04+00:00",
       "criteria": {
         "product_importance": 0,
         "be_importance": 0,

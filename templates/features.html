@@ -28,6 +28,10 @@
     <option value="tech_effort">Effort technique</option>
   </select>
   <button type="button" class="icon-btn" id="sort-dir" data-dir="desc" title="Inverser l'ordre de tri" aria-label="Inverser l'ordre de tri">↓</button>
+  <label class="toggle">
+    <input type="checkbox" id="filter-archived">
+    Masquer les archivées
+  </label>
   <span class="count" id="result-count"></span>
 </div>
 
@@ -36,6 +40,7 @@
   {% for b in features %}
   {% set c = b.criteria or {} %}
   <article class="card" data-type="{{ b.type }}" data-state="{{ b.state }}"
+           data-archived="{{ '1' if (b.project or '') in archived_projects else '0' }}"
            data-crit-product_importance="{{ c.get('product_importance', 0) }}"
            data-crit-be_importance="{{ c.get('be_importance', 0) }}"
            data-crit-users_impacted="{{ c.get('users_impacted', 0) }}"

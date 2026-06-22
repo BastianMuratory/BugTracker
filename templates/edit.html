@@ -20,11 +20,11 @@
       </div>
     </div>
     <div class="edit-actions">
-      <a class="btn btn-ghost" href="{{ url_for('bugs_page') }}">Retour</a>
+      <button type="submit" class="btn btn-primary" id="save-btn">Enregistrer</button>
       {% if not is_new %}
       <button type="button" class="btn btn-danger" id="delete-btn">Supprimer</button>
       {% endif %}
-      <button type="submit" class="btn btn-primary" id="save-btn">Enregistrer</button>
+      <a class="btn btn-ghost" href="{{ url_for('bugs_page') }}">Retour</a>
     </div>
   </div>
 

@@ -32,6 +32,28 @@
   const imgCount = document.getElementById("img-count");
   const imgFileInput = document.getElementById("img-file-input");
   const addImgBtn = document.getElementById("add-img-btn");
+  const unsavedBanner = document.getElementById("unsaved-banner");
+
+  /* ----------------------------------------------- Bandeau « non enregistré » */
+  // Tout changement dans le formulaire (champ texte, sélecteur, note, mot-clé,
+  // occurrence…) affiche le bandeau ; il disparaît une fois l'enregistrement réussi.
+  let dirty = false;
+  function markDirty() {
+    if (dirty) return;
+    dirty = true;
+    if (unsavedBanner) unsavedBanner.classList.add("show");
+    document.body.classList.add("has-unsaved");
+  }
+  function clearDirty() {
+    dirty = false;
+    if (unsavedBanner) unsavedBanner.classList.remove("show");
+    document.body.classList.remove("has-unsaved");
+  }
+  form.addEventListener("input", markDirty);
+  form.addEventListener("change", markDirty);
+  form.addEventListener("click", function (e) {
+    if (e.target.closest(".rating button, .row-del, #add-occ, .chip button")) markDirty();
+  });
 
   const TEXT_FIELDS = [
     "description", "nas_link", "observed_behavior", "expected_behavior", "conditions", "frequency",
@@ -249,7 +271,7 @@
         showToast("Enregistrement en cours, réessayez dans un instant.", "error");
         return;
       }
-      await save();
+      await save({ redirectAfter: false });
       if (form.dataset.isNew === "1") return; // la sauvegarde a échoué
     }
 
@@ -428,13 +450,17 @@
       del.id = "delete-btn";
       del.textContent = "Supprimer";
       del.addEventListener("click", onDelete);
-      editActions.insertBefore(del, saveBtn);
+      saveBtn.insertAdjacentElement("afterend", del);
     }
   }
 
   /* ----------------------------------------------------------------- Save */
+  // Par défaut, un enregistrement réussi renvoie vers la page de liste (Bugs /
+  // Features). On désactive ce renvoi pour l'enregistrement automatique déclenché
+  // en coulisse avant l'envoi d'une image (l'utilisateur n'a pas cliqué "Enregistrer").
   let saving = false;
-  async function save() {
+  async function save(opts) {
+    const redirectAfter = !opts || opts.redirectAfter !== false;
     if (saving) return;
     if (!nameInput.value.trim()) {
       showToast("Le titre est obligatoire.", "error");
@@ -457,6 +483,11 @@
         showToast("Modifications enregistrées.", "success");
       }
       applyServerState(bug);
+      clearDirty();
+      if (redirectAfter) {
+        window.location.href = LIST_URL;
+        return;
+      }
     } catch (err) {
       showToast(err.message || "Échec de l'enregistrement.", "error");
     } finally {

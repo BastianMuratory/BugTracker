@@ -33,6 +33,11 @@
         <span class="col-count">{{ col.bugs|length }}</span>
       </div>
       <div class="col-actions">
+        {% if col.fixed %}
+        <button type="button" class="icon-btn col-collapse" title="Réduire / agrandir la colonne" aria-label="Réduire ou agrandir la colonne" aria-pressed="false">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg>
+        </button>
+        {% endif %}
         <button type="button" class="icon-btn col-add" title="Ajouter un élément à cette colonne" aria-label="Ajouter un élément">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
         </button>

@@ -608,6 +608,31 @@
     });
   });
 
+  /* ---------- Réduction des colonnes fixes (indépendante l'une de l'autre) - */
+  // L'état réduit / déplié est mémorisé par nature (bug / feature) afin de
+  // persister entre deux visites du tableau.
+  const COLLAPSE_KEY_PREFIX = "bugtrack-collapsed-";
+  board.querySelectorAll(".col-collapse").forEach(function (btn) {
+    const col = btn.closest(".column");
+    const kind = col.getAttribute("data-kind") || "bug";
+    const key = COLLAPSE_KEY_PREFIX + kind;
+    let collapsed = false;
+    try { collapsed = localStorage.getItem(key) === "1"; } catch (e) {}
+
+    function apply() {
+      col.classList.toggle("collapsed", collapsed);
+      btn.setAttribute("aria-pressed", collapsed ? "true" : "false");
+      btn.title = collapsed ? "Agrandir la colonne" : "Réduire la colonne";
+    }
+    apply();
+
+    btn.addEventListener("click", function () {
+      collapsed = !collapsed;
+      apply();
+      try { localStorage.setItem(key, collapsed ? "1" : "0"); } catch (e) {}
+    });
+  });
+
   /* ---------- Tri des colonnes fixes par critère noté sur 5 --------------- */
   board.querySelectorAll(".col-sort").forEach(function (sortBox) {
     const select = sortBox.querySelector(".col-sort-select");

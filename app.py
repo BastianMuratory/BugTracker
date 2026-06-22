@@ -190,6 +190,7 @@ def bugs_page():
         bugs=bugs,
         states=db.VALID_STATES,
         types=db.VALID_TYPES,
+        archived_projects=db.list_archived_projects(),
     )
 
 
@@ -204,6 +205,7 @@ def features_page():
         features=features,
         states=db.VALID_STATES,
         types=db.VALID_TYPES,
+        archived_projects=db.list_archived_projects(),
     )
 
 
