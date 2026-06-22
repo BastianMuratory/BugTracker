@@ -281,9 +281,9 @@ def board_page():
     unassigned = [b for b in bugs if not (b.get("project") or "").strip()]
     unassigned_bugs = [b for b in unassigned if b.get("kind", "bug") != "feature"]
     unassigned_features = [b for b in unassigned if b.get("kind") == "feature"]
-    columns.append({"name": "", "label": "Bugs non assignée", "fixed": True,
+    columns.append({"name": "", "label": "Bugs non assignés", "fixed": True,
                     "kind": "bug", "bugs": _sort_bugs(unassigned_bugs)})
-    columns.append({"name": "", "label": "Feature non assignée", "fixed": True,
+    columns.append({"name": "", "label": "Features non assignées", "fixed": True,
                     "kind": "feature", "bugs": _sort_bugs(unassigned_features)})
     for p in projects:
         col_bugs = [b for b in bugs if (b.get("project") or "").strip() == p]

@@ -15,6 +15,20 @@
   <section class="column" data-project="{{ col.name }}"{% if col.fixed %} data-fixed="1"{% endif %}{% if col.kind %} data-kind="{{ col.kind }}"{% endif %}{% if col.start_date %} data-start="{{ col.start_date }}"{% endif %}{% if col.end_date %} data-end="{{ col.end_date }}"{% endif %}>
     <div class="col-head">
       <div class="col-title">
+        {% if col.kind == 'bug' %}
+        <span class="col-kind-ico col-kind-bug" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M8 6a4 4 0 0 1 8 0"/><rect x="7" y="8" width="10" height="11" rx="5"/>
+            <path d="M12 8v11M3 11h4M17 11h4M4 16h3M17 16h3M4 6h3M17 6h3"/>
+          </svg>
+        </span>
+        {% elif col.kind == 'feature' %}
+        <span class="col-kind-ico col-kind-feature" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="m12 3 2.4 5 5.6.6-4.2 3.8 1.2 5.6-5-3-5 3 1.2-5.6L2 8.6 7.6 8 12 3Z"/>
+          </svg>
+        </span>
+        {% endif %}
         <span class="col-name {{ 'fixed' if col.fixed else '' }}" title="{{ col.label }}">{{ col.label }}</span>
         <span class="col-count">{{ col.bugs|length }}</span>
       </div>

@@ -32,61 +32,36 @@
     <!-- Colonne principale : descriptions + occurrences -->
     <div>
       <section class="panel">
-        <div class="desc-with-criteria">
-          <div class="criteria-col">
-            <div class="side-title">Critères <span class="hint">(note de 1 à 5)</span></div>
-            {% set crit = (bug.criteria or {}) if not is_new else {} %}
-            {% set criteria_labels = [
-                ('product_importance', 'Importance produit'),
-                ('be_importance', 'Importance BE'),
-                ('users_impacted', "Nombre d'utilisateurs impactés"),
-                ('urgency', 'Urgence'),
-                ('tech_effort', 'Effort technique')
-              ] %}
-            {% for key, label in criteria_labels %}
-            <div class="criterion">
-              <div class="criterion-label">{{ label }}</div>
-              <div class="rating" role="group" aria-label="{{ label }} (note de 1 à 5)">
-                <input type="hidden" data-criterion="{{ key }}" value="{{ crit.get(key, 0) }}">
-                {% for n in [1, 2, 3, 4, 5] %}
-                <button type="button" data-val="{{ n }}" aria-pressed="false" aria-label="{{ n }} sur 5">{{ n }}</button>
-                {% endfor %}
-              </div>
-            </div>
-            {% endfor %}
+        <div class="desc-col">
+          <div class="field">
+            <label for="f-description">Description</label>
+            <textarea id="f-description" data-field="description"
+                      placeholder="En quoi consiste le bug ?">{{ '' if is_new else (bug.description or '') }}</textarea>
           </div>
-
-          <div class="desc-col">
-            <div class="field">
-              <label for="f-description">Description</label>
-              <textarea id="f-description" data-field="description"
-                        placeholder="En quoi consiste le bug ?">{{ '' if is_new else (bug.description or '') }}</textarea>
-            </div>
-            <div class="field">
-              <label for="f-nas_link">Lien NAS <span class="hint">(dossier ou fichier partagé pour ce bug)</span></label>
-              <input type="text" id="f-nas_link" class="nas" data-field="nas_link"
-                     placeholder="\\nas\bugs\BUG-XXX\…" value="{{ '' if is_new else (bug.nas_link or '') }}">
-            </div>
-            <div class="field">
-              <label for="f-observed_behavior">Comportement observé / Impact opérationnel</label>
-              <textarea id="f-observed_behavior" data-field="observed_behavior"
-                        placeholder="Ce qui se passe réellement, et l'impact sur l'exploitation.">{{ '' if is_new else (bug.observed_behavior or '') }}</textarea>
-            </div>
-            <div class="field">
-              <label for="f-expected_behavior">Comportement attendu</label>
-              <textarea id="f-expected_behavior" data-field="expected_behavior"
-                        placeholder="Ce qui devrait se passer.">{{ '' if is_new else (bug.expected_behavior or '') }}</textarea>
-            </div>
-            <div class="field">
-              <label for="f-conditions">Conditions d'apparition</label>
-              <textarea id="f-conditions" data-field="conditions"
-                        placeholder="Dans quelles conditions le bug se déclenche-t-il ?">{{ '' if is_new else (bug.conditions or '') }}</textarea>
-            </div>
-            <div class="field">
-              <label for="f-frequency">Fréquence d'apparition</label>
-              <textarea id="f-frequency" data-field="frequency"
-                        placeholder="Systématique, fréquent, rare…">{{ '' if is_new else (bug.frequency or '') }}</textarea>
-            </div>
+          <div class="field">
+            <label for="f-nas_link">Lien NAS <span class="hint">(dossier ou fichier partagé pour ce bug)</span></label>
+            <input type="text" id="f-nas_link" class="nas" data-field="nas_link"
+                   placeholder="\\nas\bugs\BUG-XXX\…" value="{{ '' if is_new else (bug.nas_link or '') }}">
+          </div>
+          <div class="field">
+            <label for="f-observed_behavior">Comportement observé / Impact opérationnel</label>
+            <textarea id="f-observed_behavior" data-field="observed_behavior"
+                      placeholder="Ce qui se passe réellement, et l'impact sur l'exploitation.">{{ '' if is_new else (bug.observed_behavior or '') }}</textarea>
+          </div>
+          <div class="field">
+            <label for="f-expected_behavior">Comportement attendu</label>
+            <textarea id="f-expected_behavior" data-field="expected_behavior"
+                      placeholder="Ce qui devrait se passer.">{{ '' if is_new else (bug.expected_behavior or '') }}</textarea>
+          </div>
+          <div class="field">
+            <label for="f-conditions">Conditions d'apparition</label>
+            <textarea id="f-conditions" data-field="conditions"
+                      placeholder="Dans quelles conditions le bug se déclenche-t-il ?">{{ '' if is_new else (bug.conditions or '') }}</textarea>
+          </div>
+          <div class="field">
+            <label for="f-frequency">Fréquence d'apparition</label>
+            <textarea id="f-frequency" data-field="frequency"
+                      placeholder="Systématique, fréquent, rare…">{{ '' if is_new else (bug.frequency or '') }}</textarea>
           </div>
         </div>
       </section>
@@ -162,7 +137,8 @@
       </section>
     </div>
 
-    <!-- Colonne latérale : métadonnées -->
+    <!-- Colonne latérale : métadonnées + critères -->
+    <div>
     <aside class="panel">
       <div class="side-title">Informations</div>
 
@@ -211,6 +187,30 @@
         </div>
       </div>
     </aside>
+
+    <section class="panel criteria-panel">
+      <div class="side-title">Critères <span class="hint">(note de 1 à 5)</span></div>
+      {% set crit = (bug.criteria or {}) if not is_new else {} %}
+      {% set criteria_labels = [
+          ('product_importance', 'Importance produit'),
+          ('be_importance', 'Importance BE'),
+          ('users_impacted', "Nombre d'utilisateurs impactés"),
+          ('urgency', 'Urgence'),
+          ('tech_effort', 'Effort technique')
+        ] %}
+      {% for key, label in criteria_labels %}
+      <div class="criterion">
+        <div class="criterion-label">{{ label }}</div>
+        <div class="rating" role="group" aria-label="{{ label }} (note de 1 à 5)">
+          <input type="hidden" data-criterion="{{ key }}" value="{{ crit.get(key, 0) }}">
+          {% for n in [1, 2, 3, 4, 5] %}
+          <button type="button" data-val="{{ n }}" aria-pressed="false" aria-label="{{ n }} sur 5">{{ n }}</button>
+          {% endfor %}
+        </div>
+      </div>
+      {% endfor %}
+    </section>
+    </div>
   </div>
 </form>
 {% endblock %}
