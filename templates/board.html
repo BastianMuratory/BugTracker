@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Tableau — Bugtrack{% endblock %}
+{% block main_class %}board-main{% endblock %}
+
+{% block content %}
+<div class="board-head">
+  <div>
+    <h1>Tableau</h1>
+    <div class="sub">Glissez-déposez les cartes entre les colonnes pour les classer par release / projet.</div>
+  </div>
+</div>
+
+<div class="board" id="board">
+  {% for col in columns %}
+  <section class="column" data-project="{{ col.name }}"{% if col.fixed %} data-fixed="1"{% endif %}>
+    <div class="col-head">
+      <div class="col-title">
+        <span class="col-name {{ 'fixed' if col.fixed else '' }}" title="{{ col.label }}">{{ col.label }}</span>
+        <span class="col-count">{{ col.bugs|length }}</span>
+      </div>
+      <div class="col-actions">
+        <button type="button" class="icon-btn col-add" title="Ajouter un élément à cette colonne" aria-label="Ajouter un élément">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        </button>
+        {% if not col.fixed %}
+        <button type="button" class="icon-btn col-menu" title="Options de la colonne" aria-label="Options de la colonne">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg>
+        </button>
+        {% endif %}
+      </div>
+    </div>
+    {% if col.fixed %}
+    <div class="col-search">
+      <input type="text" class="col-search-input" placeholder="Filtrer dans « Non assigné »…" autocomplete="off">
+    </div>
+    {% endif %}
+    <div class="col-body">
+      {% for b in col.bugs %}
+      <div class="bcard" draggable="true" data-id="{{ b.id }}" data-type="{{ b.type }}"
+           data-search="{{ (b.id ~ ' ' ~ b.name ~ ' ' ~ (b.keywords | join(' '))) | lower }}">
+        <div class="bcard-top">
+          <span class="bid">{{ b.id }}</span>
+          <span class="badge badge-state" data-state="{{ b.state }}">{{ b.state }}</span>
+        </div>
+        <div class="bcard-title">{{ b.name or 'Sans titre' }}</div>
+        {% set edit_url = url_for('feature_edit', feature_id=b.id) if b.kind == 'feature' else url_for('bug_edit', bug_id=b.id) %}
+        <a class="icon-btn bcard-edit" href="{{ edit_url }}" title="Éditer cet élément" aria-label="Éditer {{ b.id }}">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        </a>
+      </div>
+      {% endfor %}
+      <div class="col-empty"{% if col.bugs|length %} style="display:none"{% endif %}>Déposez des éléments ici.</div>
+    </div>
+  </section>
+  {% endfor %}
+
+  <div class="add-col">
+    <button type="button" class="btn" id="add-col-btn">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+      Nouvelle colonne
+    </button>
+    <div class="add-col-form" id="add-col-form">
+      <input type="text" id="add-col-input" placeholder="Nom du projet / de la release" autocomplete="off">
+      <div class="row">
+        <button type="button" class="btn btn-primary btn-sm" id="add-col-confirm">Créer</button>
+        <button type="button" class="btn btn-ghost btn-sm" id="add-col-cancel">Annuler</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>window.__BUGS__ = {{ bug_index | tojson }};</script>
+<script src="{{ url_for('static', filename='js/board.js') }}"></script>
+{% endblock %}

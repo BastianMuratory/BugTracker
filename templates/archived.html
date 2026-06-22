@@ -1,0 +1,64 @@
+{% extends "base.html" %}
+{% block title %}Archives — Bugtrack{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Archives</h1>
+    <div class="sub">{{ projects|length }} projet{{ 's' if projects|length != 1 else '' }} archivé{{ 's' if projects|length != 1 else '' }}</div>
+  </div>
+</div>
+
+{% if projects %}
+<div class="arch-list">
+  {% for p in projects %}
+  <section class="arch-project" data-project="{{ p.name }}">
+    <div class="arch-head">
+      <div class="arch-title">
+        <svg class="arch-ico" viewBox="0 0 24 24" width="17" height="17" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8M10 12h4"/></svg>
+        <span class="arch-name">{{ p.name }}</span>
+        <span class="col-count">{{ p.bugs|length }}</span>
+      </div>
+      <div class="arch-actions">
+        <button type="button" class="btn btn-sm arch-restore">
+          <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+          Restaurer
+        </button>
+        <button type="button" class="btn btn-sm btn-danger arch-delete">Supprimer</button>
+      </div>
+    </div>
+
+    {% if p.bugs %}
+    <div class="arch-bugs">
+      {% for b in p.bugs %}
+      <div class="bcard" data-type="{{ b.type }}">
+        <div class="bcard-top">
+          <span class="bid">{{ b.id }}</span>
+          <span class="badge badge-state" data-state="{{ b.state }}">{{ b.state }}</span>
+        </div>
+        <div class="bcard-title">{{ b.name or 'Sans titre' }}</div>
+        {% set edit_url = url_for('feature_edit', feature_id=b.id) if b.kind == 'feature' else url_for('bug_edit', bug_id=b.id) %}
+        <a class="icon-btn bcard-edit" href="{{ edit_url }}" title="Éditer cet élément" aria-label="Éditer {{ b.id }}">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+        </a>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="arch-empty">Aucun élément rattaché à ce projet.</div>
+    {% endif %}
+  </section>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty">
+  Aucun projet archivé pour l'instant.<br>
+  Archivez un projet terminé depuis le <a href="{{ url_for('board_page') }}">Tableau</a>
+  (menu « ⋯ » d'une colonne → Archiver).
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/archived.js') }}"></script>
+{% endblock %}

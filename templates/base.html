@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Bugtrack{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%234338ca' stroke-width='1.8' stroke-linecap='round'%3E%3Cpath d='M8 6a4 4 0 0 1 8 0'/%3E%3Crect x='7' y='8' width='10' height='11' rx='5'/%3E%3Cpath d='M12 8v11M3 11h4M17 11h4M4 16h3M17 16h3M4 6h3M17 6h3'/%3E%3C/svg%3E">
+</head>
+<body>
+  <header class="nav">
+    <a class="brand" href="{{ url_for('bugs_page') }}">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 6a4 4 0 0 1 8 0"/><rect x="7" y="8" width="10" height="11" rx="5"/>
+          <path d="M12 8v11M3 11h4M17 11h4M4 16h3M17 16h3M4 6h3M17 6h3"/>
+        </svg>
+      </span>
+      <span class="brand-name">Bug<b>track</b></span>
+    </a>
+    <nav class="nav-links">
+      <a href="{{ url_for('bugs_page') }}" class="{{ 'active' if request.endpoint in ['bugs_page','bug_edit','bug_new'] else '' }}">Bugs</a>
+      <a href="{{ url_for('features_page') }}" class="{{ 'active' if request.endpoint in ['features_page','feature_edit','feature_new'] else '' }}">Features</a>
+      <a href="{{ url_for('board_page') }}" class="{{ 'active' if request.endpoint == 'board_page' else '' }}">Tableau</a>
+      <a href="{{ url_for('archived_page') }}" class="{{ 'active' if request.endpoint == 'archived_page' else '' }}">Archives</a>
+    </nav>
+    <div class="nav-actions">
+      {% if session.get('user') %}
+      <span class="link-quiet" title="Connecté">{{ session['user'] }}</span>
+      {% endif %}
+      <a class="link-quiet" href="{{ url_for('api_export') }}" title="Télécharger une sauvegarde JSON de la base">Sauvegarde</a>
+      <a class="btn btn-primary" href="{{ url_for('new_chooser') }}">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+        Nouveau
+      </a>
+      <form method="post" action="{{ url_for('logout') }}" style="display:inline">
+        <button type="submit" class="btn btn-ghost btn-sm" style="color:#aab4c8">Déconnexion</button>
+      </form>
+    </div>
+  </header>
+
+  <main class="main {% block main_class %}{% endblock %}">
+    {% block content %}{% endblock %}
+  </main>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+  <script src="{{ url_for('static', filename='js/common.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

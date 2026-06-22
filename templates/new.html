@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block title %}Nouveau — Bugtrack{% endblock %}
+
+{% block content %}
+<div class="chooser">
+  <div class="chooser-head">
+    <h1>Quel type de point voulez-vous ajouter&nbsp;?</h1>
+    <div class="sub">Bugs et features sont suivis séparément, mais se côtoient sur le Tableau.</div>
+  </div>
+
+  <div class="chooser-grid">
+    <a class="chooser-card chooser-bug" href="{{ url_for('bug_new') }}">
+      <span class="chooser-ico" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M8 6a4 4 0 0 1 8 0"/><rect x="7" y="8" width="10" height="11" rx="5"/>
+          <path d="M12 8v11M3 11h4M17 11h4M4 16h3M17 16h3M4 6h3M17 6h3"/>
+        </svg>
+      </span>
+      <span class="chooser-kind">BUG</span>
+      <span class="chooser-desc">Un dysfonctionnement&nbsp;: quelque chose ne marche pas comme prévu. On y décrit le comportement observé, le comportement attendu, les conditions et la fréquence d'apparition.</span>
+      <span class="chooser-go">Créer un bug
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </span>
+    </a>
+
+    <a class="chooser-card chooser-feature" href="{{ url_for('feature_new') }}">
+      <span class="chooser-ico" aria-hidden="true">
+        <svg viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="m12 3 2.4 5 5.6.6-4.2 3.8 1.2 5.6-5-3-5 3 1.2-5.6L2 8.6 7.6 8 12 3Z"/>
+        </svg>
+      </span>
+      <span class="chooser-kind">FEATURE</span>
+      <span class="chooser-desc">Une nouvelle fonctionnalité ou amélioration&nbsp;: un besoin à couvrir. On y décrit le problème à résoudre, le bénéfice attendu, le fonctionnement visé et les critères d'acceptation.</span>
+      <span class="chooser-go">Créer une feature
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </span>
+    </a>
+  </div>
+</div>
+{% endblock %}

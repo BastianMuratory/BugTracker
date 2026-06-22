@@ -1,0 +1,12 @@
+{
+  "users": [
+    {
+      "username": "bastian",
+      "password_hash": "scrypt:32768:8:1$XuSBg0KfX7ztUuaO$436a0ff539edb8cbb6c5832fa7307b755fbe0dad1169d87c0adec438c6cc0f68b9bdf5b09facb3ac20e6771426d75caed75726ad4f84eb0ba9d1632e3c7b4041"
+    },
+    {
+      "username": "baba",
+      "password_hash": "scrypt:32768:8:1$RdyhL6DxOYxJ0II6$d1d833278a5fb1ee6f2279a5d601d042fb5048107f1bd3d37ee57a9cdf483b4a19f2e2ca9f3b3a460ee80aa817408d9e277c8fc5ff38f2b861d182343bcac0f9"
+    }
+  ]
+}

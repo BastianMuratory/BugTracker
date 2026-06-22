@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}Features — Bugtrack{% endblock %}
+
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Features</h1>
+    <div class="sub">{{ features|length }} feature{{ 's' if features|length != 1 else '' }} au total</div>
+  </div>
+</div>
+
+<div class="toolbar">
+  <input type="text" id="search" class="search" placeholder="Rechercher : titre, ID, mot-clé, responsable, projet…" autocomplete="off">
+  <select id="filter-state" class="filter">
+    <option value="">Tous les états</option>
+    {% for s in states %}<option value="{{ s }}">{{ s }}</option>{% endfor %}
+  </select>
+  <select id="filter-type" class="filter">
+    <option value="">Toutes les priorités</option>
+    {% for t in types %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
+  </select>
+  <span class="count" id="result-count"></span>
+</div>
+
+{% if features %}
+<div class="grid" id="grid">
+  {% for b in features %}
+  <article class="card" data-type="{{ b.type }}" data-state="{{ b.state }}"
+           data-search="{{ (b.name ~ ' ' ~ b.id ~ ' ' ~ (b.responsible or '') ~ ' ' ~ (b.project or '') ~ ' ' ~ (b.keywords | join(' '))) | lower }}">
+    <div class="card-head">
+      <div class="card-titles">
+        <h2 class="card-title">{{ b.name or 'Sans titre' }}</h2>
+        <span class="bid">{{ b.id }}</span>
+      </div>
+      <a class="icon-btn edit-link" href="{{ url_for('feature_edit', feature_id=b.id) }}" title="Éditer cette feature" aria-label="Éditer la feature {{ b.id }}">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+      </a>
+    </div>
+
+    <div class="badges">
+      <span class="badge badge-state" data-state="{{ b.state }}">{{ b.state }}</span>
+      <span class="badge badge-type" data-type="{{ b.type }}">{{ b.type }}</span>
+    </div>
+
+    <dl class="meta">
+      <div><dt>Projet</dt><dd>{{ b.project or '—' }}</dd></div>
+      <div><dt>Responsable</dt><dd>{{ b.responsible or '—' }}</dd></div>
+    </dl>
+
+    {% if b.keywords %}
+    <div class="kw-list">
+      {% for k in b.keywords %}<span class="kw">{{ k }}</span>{% endfor %}
+    </div>
+    {% endif %}
+  </article>
+  {% endfor %}
+</div>
+<div class="empty" id="no-results" style="display:none">Aucune feature ne correspond à la recherche.</div>
+{% else %}
+<div class="empty">
+  Aucune feature pour l'instant.<br>
+  <a href="{{ url_for('feature_new') }}">Créer la première feature</a>.
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/bugs.js') }}"></script>
+{% endblock %}

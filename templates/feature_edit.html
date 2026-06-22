@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+{% block title %}{% if is_new %}Nouvelle feature{% else %}{{ feature.id }} — {{ feature.name or 'Sans titre' }}{% endif %} — Bugtrack{% endblock %}
+
+{% block content %}
+<form id="item-form" data-entity="feature" data-api-base="/api/features"
+      data-list-url="{{ url_for('features_page') }}" data-path-base="/feature"
+      data-is-new="{{ '1' if is_new else '0' }}"
+      data-bug-id="{{ '' if is_new else feature.id }}" autocomplete="off">
+
+  <div class="edit-bar">
+    <div style="flex:1; min-width:0;">
+      <input type="text" id="f-name" class="title-input" placeholder="Titre de la feature (une phrase descriptive)…"
+             value="{{ '' if is_new else (feature.name or '') }}">
+      <div class="edit-sub">
+        <span class="bid">{{ 'Nouvelle feature' if is_new else feature.id }}</span>
+        {% if not is_new %}
+        <span class="muted">Créé&nbsp;: {{ feature.created_at | eurodate }}</span>
+        <span class="muted">Modifié&nbsp;: {{ feature.updated_at | eurodate }}</span>
+        {% endif %}
+      </div>
+    </div>
+    <div class="edit-actions">
+      <a class="btn btn-ghost" href="{{ url_for('features_page') }}">Retour</a>
+      {% if not is_new %}
+      <button type="button" class="btn btn-danger" id="delete-btn">Supprimer</button>
+      {% endif %}
+      <button type="submit" class="btn btn-primary" id="save-btn">Enregistrer</button>
+    </div>
+  </div>
+
+  <div class="edit-grid">
+    <!-- Colonne principale : description fonctionnelle + occurrences -->
+    <div>
+      <section class="panel">
+        <div class="field">
+          <label for="f-problem">Problème à résoudre <span class="hint">(quel est le besoin utilisateur ?)</span></label>
+          <textarea id="f-problem" data-field="problem"
+                    placeholder="Quel manque, quelle douleur ou quel besoin cette feature adresse-t-elle ?">{{ '' if is_new else (feature.problem or '') }}</textarea>
+        </div>
+        <div class="field">
+          <label for="f-description">Description de la feature</label>
+          <textarea id="f-description" data-field="description"
+                    placeholder="En quoi consiste cette nouvelle fonctionnalité ?">{{ '' if is_new else (feature.description or '') }}</textarea>
+        </div>
+        <div class="field">
+          <label for="f-nas_link">Lien NAS <span class="hint">(dossier ou fichier partagé pour cette feature)</span></label>
+          <input type="text" id="f-nas_link" class="nas" data-field="nas_link"
+                 placeholder="\\nas\features\FEAT-XXX\…" value="{{ '' if is_new else (feature.nas_link or '') }}">
+        </div>
+        <div class="field">
+          <label for="f-benefit">Bénéfice attendu <span class="hint">(gain de temps, revenus, satisfaction client, conformité, etc.)</span></label>
+          <textarea id="f-benefit" data-field="benefit"
+                    placeholder="Quel gain concret apporte cette feature ?">{{ '' if is_new else (feature.benefit or '') }}</textarea>
+        </div>
+        <div class="field">
+          <label for="f-functional_description">Description fonctionnelle <span class="hint">(que doit faire le système ?)</span></label>
+          <textarea id="f-functional_description" data-field="functional_description"
+                    placeholder="Comportement attendu du système, écrans, règles métier…">{{ '' if is_new else (feature.functional_description or '') }}</textarea>
+        </div>
+        <div class="field">
+          <label for="f-acceptance_criteria">Critères d'acceptation <span class="hint">(comment savoir que la fonctionnalité est terminée ?)</span></label>
+          <textarea id="f-acceptance_criteria" data-field="acceptance_criteria"
+                    placeholder="Conditions vérifiables qui prouvent que la feature est faite.">{{ '' if is_new else (feature.acceptance_criteria or '') }}</textarea>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="img-head">
+          <h3>Images <span class="count-badge" id="img-count">{{ feature.images|length if not is_new else 0 }}</span></h3>
+          <div class="img-head-actions">
+            <span class="hint">Glisser-déposer, sélectionner ou coller (Ctrl+V)</span>
+            <button type="button" class="btn btn-sm" id="add-img-btn">
+              <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+              Ajouter une image
+            </button>
+            <input type="file" id="img-file-input" accept="image/png,image/jpeg,image/gif,image/webp" multiple hidden>
+          </div>
+        </div>
+        <div class="img-dropzone" id="img-dropzone">
+          <div class="img-gallery" id="img-gallery">
+            {% if not is_new %}{% for fname in feature.images %}
+            <figure class="img-thumb" data-filename="{{ fname }}">
+              <img src="{{ url_for('serve_upload', filename=fname) }}" alt="Image jointe à la feature" loading="lazy">
+              <button type="button" class="icon-btn img-del" title="Retirer cette image" aria-label="Retirer cette image">
+                <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"/></svg>
+              </button>
+            </figure>
+            {% endfor %}{% endif %}
+          </div>
+          <div class="img-empty" id="img-empty"{% if not is_new and feature.images %} style="display:none"{% endif %}>
+            Aucune image. Glissez un fichier ici, collez une capture (Ctrl+V) ou utilisez « Ajouter une image ».
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <div class="occ-head">
+          <h3>Occurrences <span class="count-badge" id="occ-count">0</span></h3>
+          <button type="button" class="btn btn-sm" id="add-occ">
+            <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+            Ajouter une occurrence
+          </button>
+        </div>
+        <div class="occ-table-wrap">
+          <table class="occ-table">
+            <thead>
+              <tr>
+                <th>Lieu</th>
+                <th>Personne</th>
+                <th>Système</th>
+                <th>Date</th>
+                <th class="col-act"></th>
+              </tr>
+            </thead>
+            <tbody id="occ-body">
+              {% if not is_new %}{% for o in feature.occurrences %}
+              <tr class="occ-row" data-occ-id="{{ o.id }}">
+                <td><input type="text" data-field="location" value="{{ o.location or '' }}"></td>
+                <td><input type="text" data-field="person" value="{{ o.person or '' }}"></td>
+                <td><input type="text" data-field="system" value="{{ o.system or '' }}"></td>
+                <td><input type="text" class="date-eu" data-field="date" inputmode="numeric" maxlength="10" placeholder="JJ/MM/AAAA" value="{{ o.date | eudate }}"></td>
+                <td class="col-act">
+                  <button type="button" class="icon-btn row-del" title="Supprimer cette ligne" aria-label="Supprimer cette ligne">
+                    <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"/></svg>
+                  </button>
+                </td>
+              </tr>
+              {% endfor %}{% endif %}
+              <tr class="occ-empty" id="occ-empty">
+                <td colspan="5">Aucune occurrence enregistrée. Cliquez sur « Ajouter une occurrence ».</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </div>
+
+    <!-- Colonne latérale : métadonnées -->
+    <aside class="panel">
+      <div class="side-title">Informations</div>
+
+      <div class="field">
+        <label for="f-state">État</label>
+        <select id="f-state" class="input swatch-select" data-field="state"
+                data-value="{{ feature.state if not is_new else 'BACKLOG' }}">
+          {% for s in states %}
+          <option value="{{ s }}" {{ 'selected' if (not is_new and feature.state == s) or (is_new and s == 'BACKLOG') else '' }}>{{ s }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="f-type">Priorité</label>
+        <select id="f-type" class="input swatch-select" data-field="type"
+                data-value="{{ feature.type if not is_new else 'MOYENNE' }}">
+          {% for t in types %}
+          <option value="{{ t }}" {{ 'selected' if (not is_new and feature.type == t) or (is_new and t == 'MOYENNE') else '' }}>{{ t }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="f-project">Projet associé <span class="hint">(suggestions : projets actifs)</span></label>
+        <input type="text" id="f-project" class="combo" data-field="project" list="project-list"
+               placeholder="Aucun (non assigné)" value="{{ '' if is_new else (feature.project or '') }}">
+        <datalist id="project-list">
+          {% for p in projects %}<option value="{{ p }}"></option>{% endfor %}
+        </datalist>
+      </div>
+
+      <div class="field">
+        <label for="f-responsible">Responsable</label>
+        <input type="text" id="f-responsible" data-field="responsible"
+               placeholder="Qui s'en occupe ?" value="{{ '' if is_new else (feature.responsible or '') }}">
+      </div>
+
+      <div class="field">
+        <label for="kw-field">Mots-clés <span class="hint">(Entrée ou virgule pour valider)</span></label>
+        <div class="tag-input" id="kw-input">
+          {% if not is_new %}{% for k in feature.keywords %}
+          <span class="chip" data-value="{{ k }}">{{ k }}<button type="button" aria-label="Retirer le mot-clé {{ k }}">×</button></span>
+          {% endfor %}{% endif %}
+          <input type="text" id="kw-field" placeholder="ajouter…">
+        </div>
+      </div>
+    </aside>
+  </div>
+</form>
+{% endblock %}
+
+{% block scripts %}
+<template id="occ-template">
+  <tr class="occ-row">
+    <td><input type="text" data-field="location"></td>
+    <td><input type="text" data-field="person"></td>
+    <td><input type="text" data-field="system"></td>
+    <td><input type="text" class="date-eu" data-field="date" inputmode="numeric" maxlength="10" placeholder="JJ/MM/AAAA"></td>
+    <td class="col-act">
+      <button type="button" class="icon-btn row-del" title="Supprimer cette ligne" aria-label="Supprimer cette ligne">
+        <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"/></svg>
+      </button>
+    </td>
+  </tr>
+</template>
+<script src="{{ url_for('static', filename='js/edit.js') }}"></script>
+{% endblock %}
