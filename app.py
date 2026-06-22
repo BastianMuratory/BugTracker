@@ -43,13 +43,14 @@ Authentification :
   (voir le README). Les mots de passe sont hashés (werkzeug.security) et
   stockés dans data/users.json, jamais en clair.
 """
+import json
 import os
 import secrets
 from datetime import datetime, timedelta
 
 from flask import (
-    Flask, render_template, request, jsonify, redirect, url_for, abort, send_file,
-    session, send_from_directory,
+    Flask, render_template, request, jsonify, redirect, url_for, abort,
+    session, send_from_directory, Response,
 )
 
 import auth
@@ -488,9 +489,14 @@ def api_reorder_projects():
 # --------------------------------------------------------------------------- #
 @app.get("/api/export")
 def api_export():
-    db.get_data()  # garantit l'existence du fichier
-    return send_file(db.DB_PATH, as_attachment=True, download_name="bugs.json",
-                     mimetype="application/json")
+    # La base est désormais répartie sur trois fichiers (bugs/features/projets) ;
+    # l'export recompose une vue combinée, au format de l'ancien fichier unique.
+    payload = json.dumps(db.get_data(), ensure_ascii=False, indent=2)
+    return Response(
+        payload,
+        mimetype="application/json",
+        headers={"Content-Disposition": "attachment; filename=bugtrack-export.json"},
+    )
 
 
 if __name__ == "__main__":

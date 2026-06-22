@@ -50,7 +50,8 @@ Aucune dépendance front-end externe : l'interface fonctionne hors-ligne, sans C
   s'affichent sous le titre de sa colonne.
 - **Archives** (`/archived`) — projets terminés et archivés, avec leurs bugs et
   features ; chaque projet peut être **restauré** ou supprimé.
-- **Sauvegarde** : bouton « Sauvegarde » qui télécharge la base JSON.
+- **Sauvegarde** : bouton « Sauvegarde » qui télécharge un export JSON combiné
+  (bugs + features + projets).
 
 ### Règle d'état automatique
 
@@ -145,27 +146,29 @@ sudo systemctl enable --now bugtrack
 
 ## Base de données
 
-Tout est stocké dans **`data/bugs.json`**. Au premier lancement, le fichier est
-créé automatiquement avec quelques exemples (bugs et feature). Les images jointes
-sont stockées séparément, comme fichiers, dans **`data/uploads/`** (seul leur nom
-de fichier est référencé dans `bugs.json`).
+La base est répartie sur **quatre fichiers JSON** indépendants dans `data/` :
 
-Bugs et features sont stockés dans **la même liste** (`bugs`), ce qui permet de
-les afficher ensemble sur le Tableau ; ils se distinguent par le champ **`kind`**
-(`"bug"` ou `"feature"`). Les bugs ont un identifiant `BUG-NNN`, les features
-`FEAT-NNN`. Le champ **`type`** porte la **criticité** (bug) ou la **priorité**
-(feature) — même échelle `CRITIQUE / ÉLEVÉE / MOYENNE / FAIBLE`.
+- **`bugs.json`** — uniquement les bugs (`{"meta": ..., "bugs": [...]}`).
+- **`features.json`** — uniquement les features (`{"meta": ..., "features": [...]}`).
+- **`projects.json`** — projets actifs/archivés et leurs métadonnées
+  (`{"meta": ..., "projects": [...], "archived_projects": [...], "project_meta": {...}}`).
+- **`users.json`** — comptes utilisateurs (gérés par `manage_users.py`,
+  mots de passe hashés).
 
-Structure :
+Au premier lancement, les trois premiers fichiers sont créés automatiquement
+avec quelques exemples (bugs et feature). Les images jointes sont stockées
+séparément, comme fichiers, dans **`data/uploads/`** (seul leur nom de fichier
+est référencé dans `bugs.json` / `features.json`).
+
+Un bug a un identifiant `BUG-NNN`, une feature `FEAT-NNN`. Le champ **`type`**
+porte la **criticité** (bug) ou la **priorité** (feature) — même échelle
+`CRITIQUE / ÉLEVÉE / MOYENNE / FAIBLE`.
+
+Structure de `bugs.json` :
 
 ```json
 {
-  "meta": { "version": 1 },
-  "projects": ["Release 1.0", "Release 1.1"],
-  "archived_projects": [],
-  "project_meta": {
-    "Release 1.0": { "start_date": "2026-06-01", "end_date": "2026-06-30" }
-  },
+  "meta": { "version": 2 },
   "bugs": [
     {
       "id": "BUG-001",
@@ -193,63 +196,52 @@ Structure :
       ],
       "created_at": "…",
       "updated_at": "…"
-    },
-    {
-      "id": "FEAT-001",
-      "kind": "feature",
-      "name": "…",
-      "state": "BACKLOG",
-      "type": "MOYENNE",
-      "project": "Release 1.1",
-      "responsible": "Alice",
-      "keywords": ["ergonomie"],
-      "problem": "…",
-      "description": "…",
-      "nas_link": "",
-      "benefit": "…",
-      "functional_description": "…",
-      "acceptance_criteria": "…",
-      "images": [],
-      "criteria": {
-        "product_importance": 3, "be_importance": 3, "users_impacted": 4,
-        "urgency": 2, "tech_effort": 2
-      },
-      "occurrences": [],
-      "created_at": "…",
-      "updated_at": "…"
     }
   ]
 }
 ```
 
-> Note : les bases créées avant la séparation bugs/features sont **migrées
-> automatiquement** au premier chargement : `kind` vaut `"bug"` par défaut, les
-> anciens éléments de type `FEATURE` deviennent des features, et l'ancienne
-> échelle (`MAJEUR`/`MODÉRÉ`/`MINEURE`) est convertie en
-> `ÉLEVÉE`/`MOYENNE`/`FAIBLE`. (Les bases plus anciennes encore — sans lien NAS
-> unique ni images — sont également migrées : le lien NAS d'une ancienne
-> occurrence est repris au niveau de l'élément, `images` est initialisé à vide.)
-> Enfin, tout élément reçoit un bloc **`criteria`** (les cinq critères à 0 par
-> défaut) s'il n'en a pas, et la base reçoit un dictionnaire **`project_meta`**
-> (vide par défaut) pour les dates de début / fin des projets.
+`features.json` suit la même forme (clé `"features"` au lieu de `"bugs"`),
+avec des champs propres : **problème à résoudre**, **bénéfice attendu**,
+**description fonctionnelle**, **critères d'acceptation** (en plus de
+`description`, `nas_link`, `images`, `criteria`, `occurrences`).
+
+`projects.json` :
+
+```json
+{
+  "meta": { "version": 2 },
+  "projects": ["Release 1.0", "Release 1.1"],
+  "archived_projects": [],
+  "project_meta": {
+    "Release 1.0": { "start_date": "2026-06-01", "end_date": "2026-06-30" }
+  }
+}
+```
+
+> Note : les bases créées avant cette séparation (un unique `bugs.json`
+> mélangeant bugs, features et projets) sont **migrées automatiquement**, une
+> seule fois, au premier accès : l'ancien fichier est scindé en
+> `bugs.json` / `features.json` / `projects.json`, et une copie de l'ancien
+> fichier combiné est conservée par précaution dans
+> **`data/bugs.legacy-backup.json`**. Les migrations historiques restent
+> appliquées au passage (`kind` par défaut `"bug"`, anciens éléments `FEATURE`
+> convertis en features, ancienne échelle `MAJEUR`/`MODÉRÉ`/`MINEURE` convertie
+> en `ÉLEVÉE`/`MOYENNE`/`FAIBLE`, bloc `criteria` initialisé si absent, etc.).
 
 ### Sauvegarder
 
-- Soit via le bouton **« Sauvegarde »** dans l'en-tête (télécharge `bugs.json`,
-  hors images jointes).
+- Soit via le bouton **« Sauvegarde »** dans l'en-tête (télécharge un export
+  JSON combiné des bugs, features et projets, hors images jointes).
 - Soit en copiant le dossier : `cp -r data sauvegardes/data-$(date +%F)`
-  (inclut `bugs.json` et les images de `data/uploads/`).
+  (inclut les quatre fichiers JSON et les images de `data/uploads/`).
 
 ### Repartir de zéro
 
-Arrêter l'application, puis remettre le contenu suivant dans `data/bugs.json` :
-
-```json
-{ "meta": { "version": 1 }, "projects": [], "archived_projects": [], "bugs": [] }
-```
-
-(ou supprimer le fichier : il sera recréé avec les données d'exemple au prochain
-lancement). Pensez aussi à vider `data/uploads/` si vous voulez repartir sans
+Arrêter l'application, puis supprimer `data/bugs.json`, `data/features.json`
+et `data/projects.json` (ils seront recréés — vides si vous ne voulez pas des
+données d'exemple, ou remplissez-les manuellement avec les structures
+ci-dessus). Pensez aussi à vider `data/uploads/` si vous voulez repartir sans
 les anciennes images jointes.
 
 ---
@@ -262,7 +254,10 @@ bug-tracker/
 ├── database.py         # accès à la base JSON (verrous, écriture atomique)
 ├── requirements.txt
 ├── data/
-│   ├── bugs.json       # la base (créée au 1er lancement) — bugs ET features
+│   ├── bugs.json       # les bugs (créé au 1er lancement)
+│   ├── features.json   # les features (créé au 1er lancement)
+│   ├── projects.json   # projets actifs/archivés + métadonnées (dates)
+│   ├── users.json      # comptes utilisateurs (géré par manage_users.py)
 │   └── uploads/        # images jointes (créé à la 1ère image ajoutée)
 ├── templates/
 │   ├── base.html       # gabarit commun (barre de navigation)
