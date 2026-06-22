@@ -12,7 +12,7 @@
       <input type="text" id="f-name" class="title-input" placeholder="Titre de la feature (une phrase descriptive)…"
              value="{{ '' if is_new else (feature.name or '') }}">
       <div class="edit-sub">
-        <span class="bid">{{ 'Nouvelle feature' if is_new else feature.id }}</span>
+        <span class="bid" data-kind="feature">{{ 'Nouvelle feature' if is_new else feature.id }}</span>
         {% if not is_new %}
         <span class="muted">Créé&nbsp;: {{ feature.created_at | eurodate }}</span>
         <span class="muted">Modifié&nbsp;: {{ feature.updated_at | eurodate }}</span>

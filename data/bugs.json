@@ -5,10 +5,10 @@
   "projects": [
     "Patch 1.2",
     "Release 1.1",
-    "Relase de l'enfer"
+    "Release 1.0"
   ],
   "archived_projects": [
-    "Release 1.0"
+    "Relase de l'enfer"
   ],
   "bugs": [
     {
@@ -144,7 +144,7 @@
       ],
       "id": "BUG-005",
       "created_at": "2026-06-19T09:06:17+00:00",
-      "updated_at": "2026-06-22T21:00:42+00:00",
+      "updated_at": "2026-06-22T21:43:24+00:00",
       "images": [
         "90dc6c267a5b4f86b548d9264736875b.jpg"
       ],
@@ -152,7 +152,7 @@
       "kind": "bug",
       "criteria": {
         "product_importance": 0,
-        "be_importance": 0,
+        "be_importance": 5,
         "users_impacted": 0,
         "urgency": 0,
         "tech_effort": 0
@@ -160,9 +160,9 @@
     },
     {
       "name": "test1",
-      "state": "BACKLOG",
+      "state": "TODO",
       "type": "MOYENNE",
-      "project": "",
+      "project": "Relase de l'enfer",
       "responsible": "",
       "keywords": [],
       "description": "",
@@ -176,7 +176,7 @@
       "id": "FEAT-001",
       "images": [],
       "created_at": "2026-06-22T16:55:19+00:00",
-      "updated_at": "2026-06-22T21:25:14+00:00",
+      "updated_at": "2026-06-22T21:32:26+00:00",
       "criteria": {
         "product_importance": 0,
         "be_importance": 0,
@@ -187,9 +187,9 @@
     },
     {
       "name": "test",
-      "state": "BACKLOG",
+      "state": "TODO",
       "type": "CRITIQUE",
-      "project": "",
+      "project": "Relase de l'enfer",
       "responsible": "",
       "keywords": [],
       "description": "",
@@ -203,7 +203,7 @@
       "id": "FEAT-002",
       "images": [],
       "created_at": "2026-06-22T16:57:13+00:00",
-      "updated_at": "2026-06-22T16:57:13+00:00",
+      "updated_at": "2026-06-22T21:32:27+00:00",
       "criteria": {
         "product_importance": 0,
         "be_importance": 0,
@@ -211,6 +211,141 @@
         "urgency": 0,
         "tech_effort": 0
       }
+    },
+    {
+      "name": "regfdsgsfg",
+      "state": "TODO",
+      "type": "MOYENNE",
+      "project": "Relase de l'enfer",
+      "responsible": "",
+      "keywords": [],
+      "description": "",
+      "nas_link": "",
+      "problem": "",
+      "benefit": "",
+      "functional_description": "",
+      "acceptance_criteria": "",
+      "occurrences": [],
+      "criteria": {
+        "product_importance": 0,
+        "be_importance": 0,
+        "users_impacted": 0,
+        "urgency": 0,
+        "tech_effort": 0
+      },
+      "kind": "feature",
+      "id": "FEAT-003",
+      "images": [],
+      "created_at": "2026-06-22T21:32:02+00:00",
+      "updated_at": "2026-06-22T21:32:28+00:00"
+    },
+    {
+      "name": "dsqgsdfqgsdfg",
+      "state": "TODO",
+      "type": "MOYENNE",
+      "project": "Relase de l'enfer",
+      "responsible": "",
+      "keywords": [],
+      "description": "",
+      "nas_link": "",
+      "problem": "",
+      "benefit": "",
+      "functional_description": "",
+      "acceptance_criteria": "",
+      "occurrences": [],
+      "criteria": {
+        "product_importance": 0,
+        "be_importance": 0,
+        "users_impacted": 0,
+        "urgency": 0,
+        "tech_effort": 0
+      },
+      "kind": "feature",
+      "id": "FEAT-004",
+      "images": [],
+      "created_at": "2026-06-22T21:32:07+00:00",
+      "updated_at": "2026-06-22T21:32:29+00:00"
+    },
+    {
+      "name": "qfdsgsdfqgsdfg",
+      "state": "TODO",
+      "type": "MOYENNE",
+      "project": "Relase de l'enfer",
+      "responsible": "",
+      "keywords": [],
+      "description": "",
+      "nas_link": "",
+      "problem": "",
+      "benefit": "",
+      "functional_description": "",
+      "acceptance_criteria": "",
+      "occurrences": [],
+      "criteria": {
+        "product_importance": 0,
+        "be_importance": 0,
+        "users_impacted": 0,
+        "urgency": 0,
+        "tech_effort": 0
+      },
+      "kind": "feature",
+      "id": "FEAT-005",
+      "images": [],
+      "created_at": "2026-06-22T21:32:12+00:00",
+      "updated_at": "2026-06-22T21:32:30+00:00"
+    },
+    {
+      "name": "qdfgsdfqgsqdfg",
+      "state": "TODO",
+      "type": "MOYENNE",
+      "project": "Relase de l'enfer",
+      "responsible": "",
+      "keywords": [],
+      "description": "",
+      "nas_link": "",
+      "problem": "",
+      "benefit": "",
+      "functional_description": "",
+      "acceptance_criteria": "",
+      "occurrences": [],
+      "criteria": {
+        "product_importance": 0,
+        "be_importance": 0,
+        "users_impacted": 0,
+        "urgency": 0,
+        "tech_effort": 0
+      },
+      "kind": "feature",
+      "id": "FEAT-006",
+      "images": [],
+      "created_at": "2026-06-22T21:32:16+00:00",
+      "updated_at": "2026-06-22T21:32:31+00:00"
+    },
+    {
+      "name": "qsdfgfqsdgdsfqg",
+      "state": "TODO",
+      "type": "MOYENNE",
+      "project": "Relase de l'enfer",
+      "responsible": "",
+      "keywords": [],
+      "description": "",
+      "nas_link": "",
+      "problem": "",
+      "benefit": "",
+      "functional_description": "",
+      "acceptance_criteria": "",
+      "occurrences": [],
+      "criteria": {
+        "product_importance": 0,
+        "be_importance": 0,
+        "users_impacted": 0,
+        "urgency": 0,
+        "tech_effort": 0
+      },
+      "kind": "feature",
+      "id": "FEAT-007",
+      "images": [],
+      "created_at": "2026-06-22T21:32:21+00:00",
+      "updated_at": "2026-06-22T21:32:32+00:00"
     }
   ],
   "project_meta": {

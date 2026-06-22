@@ -72,6 +72,8 @@ h1, h2, h3 { margin: 0; letter-spacing: -0.01em; }
   padding: 1px 6px;
   white-space: nowrap;
 }
+.bid[data-kind="bug"]     { background:#fdecec; color:#b91c1c; border-color:#f6c9c9; }
+.bid[data-kind="feature"] { background:#d8f3e6; color:#057a55; border-color:#aee4cb; }
 
 /* ----------------------------------------------------------------- Barre nav */
 .nav {
@@ -760,6 +762,11 @@ input[type="text"].combo {
   outline: none;
 }
 .col-search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+
+/* --- Tri par critère dans une colonne fixe (« Non assigné ») --- */
+.col-sort { display: flex; gap: 6px; padding: 0 2px 8px; align-items: center; }
+.col-sort-select { flex: 1; min-width: 0; font-size: .8rem; padding: 6px 26px 6px 9px; }
+.col-sort-dir { flex: none; width: 28px; height: 28px; font-size: .85rem; }
 
 /* --- Séparateur + état désactivé dans les menus de colonne --- */
 .menu .menu-sep { height: 1px; background: var(--border); margin: 5px 6px; }

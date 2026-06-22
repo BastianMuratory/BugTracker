@@ -19,18 +19,33 @@
     <option value="">Toutes les priorités</option>
     {% for t in types %}<option value="{{ t }}">{{ t }}</option>{% endfor %}
   </select>
+  <select id="sort-by" class="filter">
+    <option value="">Trier par : pertinence</option>
+    <option value="product_importance">Importance produit</option>
+    <option value="be_importance">Importance BE</option>
+    <option value="users_impacted">Utilisateurs impactés</option>
+    <option value="urgency">Urgence</option>
+    <option value="tech_effort">Effort technique</option>
+  </select>
+  <button type="button" class="icon-btn" id="sort-dir" data-dir="desc" title="Inverser l'ordre de tri" aria-label="Inverser l'ordre de tri">↓</button>
   <span class="count" id="result-count"></span>
 </div>
 
 {% if features %}
 <div class="grid" id="grid">
   {% for b in features %}
+  {% set c = b.criteria or {} %}
   <article class="card" data-type="{{ b.type }}" data-state="{{ b.state }}"
+           data-crit-product_importance="{{ c.get('product_importance', 0) }}"
+           data-crit-be_importance="{{ c.get('be_importance', 0) }}"
+           data-crit-users_impacted="{{ c.get('users_impacted', 0) }}"
+           data-crit-urgency="{{ c.get('urgency', 0) }}"
+           data-crit-tech_effort="{{ c.get('tech_effort', 0) }}"
            data-search="{{ (b.name ~ ' ' ~ b.id ~ ' ' ~ (b.responsible or '') ~ ' ' ~ (b.project or '') ~ ' ' ~ (b.keywords | join(' '))) | lower }}">
     <div class="card-head">
       <div class="card-titles">
         <h2 class="card-title">{{ b.name or 'Sans titre' }}</h2>
-        <span class="bid">{{ b.id }}</span>
+        <span class="bid" data-kind="{{ b.kind }}">{{ b.id }}</span>
       </div>
       <a class="icon-btn edit-link" href="{{ url_for('feature_edit', feature_id=b.id) }}" title="Éditer cette feature" aria-label="Éditer la feature {{ b.id }}">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>

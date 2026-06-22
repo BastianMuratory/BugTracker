@@ -303,6 +303,7 @@ def board_page():
             "type": b.get("type", db.DEFAULT_TYPE),
             "project": (b.get("project") or "").strip(),
             "keywords": b.get("keywords", []),
+            "criteria": b.get("criteria", {}),
         }
         for b in bugs
     ]

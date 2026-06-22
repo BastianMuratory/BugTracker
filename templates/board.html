@@ -53,13 +53,30 @@
     <div class="col-search">
       <input type="text" class="col-search-input" placeholder="Filtrer dans « {{ col.label }} »…" autocomplete="off">
     </div>
+    <div class="col-sort">
+      <select class="col-sort-select filter" aria-label="Trier « {{ col.label }} » par critère">
+        <option value="">Trier par : ordre du tableau</option>
+        <option value="product_importance">Importance produit</option>
+        <option value="be_importance">Importance BE</option>
+        <option value="users_impacted">Utilisateurs impactés</option>
+        <option value="urgency">Urgence</option>
+        <option value="tech_effort">Effort technique</option>
+      </select>
+      <button type="button" class="icon-btn col-sort-dir" data-dir="desc" title="Inverser l'ordre de tri" aria-label="Inverser l'ordre de tri">↓</button>
+    </div>
     {% endif %}
     <div class="col-body">
       {% for b in col.bugs %}
+      {% set c = b.criteria or {} %}
       <div class="bcard" draggable="true" data-id="{{ b.id }}" data-type="{{ b.type }}" data-kind="{{ b.kind }}"
+           data-crit-product_importance="{{ c.get('product_importance', 0) }}"
+           data-crit-be_importance="{{ c.get('be_importance', 0) }}"
+           data-crit-users_impacted="{{ c.get('users_impacted', 0) }}"
+           data-crit-urgency="{{ c.get('urgency', 0) }}"
+           data-crit-tech_effort="{{ c.get('tech_effort', 0) }}"
            data-search="{{ (b.id ~ ' ' ~ b.name ~ ' ' ~ (b.keywords | join(' '))) | lower }}">
         <div class="bcard-top">
-          <span class="bid">{{ b.id }}</span>
+          <span class="bid" data-kind="{{ b.kind }}">{{ b.id }}</span>
           <span class="badge badge-state" data-state="{{ b.state }}">{{ b.state }}</span>
         </div>
         <div class="bcard-title">{{ b.name or 'Sans titre' }}</div>

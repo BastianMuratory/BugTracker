@@ -17,6 +17,9 @@
     MOYENNE: "var(--sev-MOYENNE)", FAIBLE: "var(--sev-FAIBLE)",
   };
 
+  // Critères notés sur 5, communs aux bugs et aux features.
+  const CRIT_KEYS = ["product_importance", "be_importance", "users_impacted", "urgency", "tech_effort"];
+
   /* --------------------------------------------------------- Utilitaires DOM */
   function columnByProject(name) {
     return board.querySelector('.column[data-project="' + cssEsc(name) + '"]');
@@ -62,11 +65,15 @@
     const kw = Array.isArray(bug.keywords) ? bug.keywords.join(" ") : "";
     card.setAttribute("data-search",
       (bug.id + " " + (bug.name || "") + " " + kw).toLowerCase());
+    const crit = bug.criteria || {};
+    CRIT_KEYS.forEach(function (k) {
+      card.setAttribute("data-crit-" + k, crit[k] || 0);
+    });
     const editUrl = (bug.kind === "feature" ? "/feature/" : "/bug/") +
       encodeURIComponent(bug.id);
     card.innerHTML =
       '<div class="bcard-top">' +
-        '<span class="bid">' + escapeHtml(bug.id) + "</span>" +
+        '<span class="bid" data-kind="' + escapeHtml(bug.kind || "bug") + '">' + escapeHtml(bug.id) + "</span>" +
         '<span class="badge badge-state" data-state="' + escapeHtml(bug.state || "") + '">' +
           escapeHtml(bug.state || "") + "</span>" +
       "</div>" +
@@ -599,6 +606,48 @@
         }
       }
     });
+  });
+
+  /* ---------- Tri des colonnes fixes par critère noté sur 5 --------------- */
+  board.querySelectorAll(".col-sort").forEach(function (sortBox) {
+    const select = sortBox.querySelector(".col-sort-select");
+    const dirBtn = sortBox.querySelector(".col-sort-dir");
+    const fixedCol = sortBox.closest(".column");
+    const fixedBody = bodyOf(fixedCol);
+    // Ordre initial (issu du tri serveur), conservé pour l'option « ordre du tableau ».
+    const originalOrder = Array.prototype.slice.call(fixedBody.querySelectorAll(".bcard"));
+    let dir = "desc";
+
+    function critVal(card, key) {
+      return parseInt(card.getAttribute("data-crit-" + key), 10) || 0;
+    }
+
+    function applyColSort() {
+      const key = select.value;
+      const emptyEl = fixedBody.querySelector(".col-empty");
+      const current = Array.prototype.slice.call(fixedBody.querySelectorAll(".bcard"));
+      let ordered;
+      if (!key) {
+        const extra = current.filter(function (c) { return originalOrder.indexOf(c) === -1; });
+        ordered = originalOrder.filter(function (c) { return fixedBody.contains(c); }).concat(extra);
+      } else {
+        ordered = current.sort(function (a, b) {
+          const diff = critVal(b, key) - critVal(a, key);
+          return dir === "desc" ? diff : -diff;
+        });
+      }
+      ordered.forEach(function (card) { fixedBody.insertBefore(card, emptyEl); });
+    }
+
+    if (select) select.addEventListener("change", applyColSort);
+    if (dirBtn) {
+      dirBtn.addEventListener("click", function () {
+        dir = dir === "desc" ? "asc" : "desc";
+        dirBtn.textContent = dir === "desc" ? "↓" : "↑";
+        dirBtn.setAttribute("data-dir", dir);
+        applyColSort();
+      });
+    }
   });
 
   // initialise les compteurs / états vides

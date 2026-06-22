@@ -5,6 +5,8 @@
   const search = document.getElementById("search");
   const filterState = document.getElementById("filter-state");
   const filterType = document.getElementById("filter-type");
+  const sortBy = document.getElementById("sort-by");
+  const sortDir = document.getElementById("sort-dir");
   const grid = document.getElementById("grid");
   const noResults = document.getElementById("no-results");
   const resultCount = document.getElementById("result-count");
@@ -13,6 +15,23 @@
 
   const cards = Array.prototype.slice.call(grid.querySelectorAll(".card"));
   const total = cards.length;
+  let dir = "desc";
+
+  /* Tri par critère noté sur 5 (importance produit, urgence, etc.). */
+  function critVal(card, key) {
+    return parseInt(card.getAttribute("data-crit-" + key), 10) || 0;
+  }
+
+  function applySort() {
+    const key = sortBy ? sortBy.value : "";
+    const ordered = key
+      ? cards.slice().sort(function (a, b) {
+          const diff = critVal(b, key) - critVal(a, key);
+          return dir === "desc" ? diff : -diff;
+        })
+      : cards;
+    ordered.forEach(function (card) { grid.appendChild(card); });
+  }
 
   function apply() {
     const q = (search ? search.value : "").trim().toLowerCase();
@@ -42,6 +61,16 @@
   if (search) search.addEventListener("input", apply);
   if (filterState) filterState.addEventListener("change", apply);
   if (filterType) filterType.addEventListener("change", apply);
+  if (sortBy) sortBy.addEventListener("change", applySort);
+  if (sortDir) {
+    sortDir.addEventListener("click", function () {
+      dir = dir === "desc" ? "asc" : "desc";
+      sortDir.textContent = dir === "desc" ? "↓" : "↑";
+      sortDir.setAttribute("data-dir", dir);
+      applySort();
+    });
+  }
 
   apply();
+  applySort();
 })();

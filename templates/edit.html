@@ -12,7 +12,7 @@
       <input type="text" id="f-name" class="title-input" placeholder="Titre du bug (une phrase descriptive)…"
              value="{{ '' if is_new else (bug.name or '') }}">
       <div class="edit-sub">
-        <span class="bid">{{ 'Nouveau' if is_new else bug.id }}</span>
+        <span class="bid" data-kind="bug">{{ 'Nouveau' if is_new else bug.id }}</span>
         {% if not is_new %}
         <span class="muted">Créé&nbsp;: {{ bug.created_at | eurodate }}</span>
         <span class="muted">Modifié&nbsp;: {{ bug.updated_at | eurodate }}</span>
