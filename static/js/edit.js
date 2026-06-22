@@ -47,6 +47,37 @@
     sel.addEventListener("change", function () { sel.dataset.value = sel.value; });
   });
 
+  /* ---------------------------------------------- Critères (note de 1 à 5) */
+  // Chaque critère est un groupe de 5 boutons cumulatifs (façon « étoiles »).
+  // La note retenue est stockée dans un input caché [data-criterion] ; re-cliquer
+  // sur la note active la remet à 0 (« non noté »).
+  Array.prototype.forEach.call(form.querySelectorAll(".rating"), function (rating) {
+    const hidden = rating.querySelector("input[data-criterion]");
+    const buttons = rating.querySelectorAll("button[data-val]");
+    if (!hidden) return;
+
+    function paint(val) {
+      Array.prototype.forEach.call(buttons, function (btn) {
+        const n = parseInt(btn.getAttribute("data-val"), 10);
+        const on = val > 0 && val >= n;
+        btn.classList.toggle("on", on);
+        btn.setAttribute("aria-pressed", val === n ? "true" : "false");
+      });
+      rating.classList.toggle("is-set", val > 0);
+    }
+    function setVal(val) { hidden.value = String(val); paint(val); }
+
+    rating.addEventListener("click", function (e) {
+      const btn = e.target.closest("button[data-val]");
+      if (!btn) return;
+      const n = parseInt(btn.getAttribute("data-val"), 10);
+      const cur = parseInt(hidden.value, 10) || 0;
+      setVal(cur === n ? 0 : n); // re-cliquer la note active l'efface
+    });
+
+    paint(parseInt(hidden.value, 10) || 0);
+  });
+
   /* ----------------------- Création : état par défaut selon le projet choisi */
   // À la création, l'état par défaut est BACKLOG ; dès qu'un projet est associé,
   // un bug encore en BACKLOG passe en TODO (et inversement si on retire le projet).
@@ -345,6 +376,16 @@
       // ignore les lignes entièrement vides
       if (OCC_FIELDS.some(function (f) { return occ[f]; })) payload.occurrences.push(occ);
     });
+
+    // Critères d'évaluation (note 1-5 ; 0 = non noté). Chaque note est portée par
+    // un input caché [data-criterion]. Le serveur valide les bornes et ignore les
+    // clés inconnues, mais on normalise déjà ici.
+    const criteria = {};
+    Array.prototype.forEach.call(form.querySelectorAll("[data-criterion]"), function (el) {
+      const v = parseInt(el.value, 10);
+      criteria[el.getAttribute("data-criterion")] = (v >= 1 && v <= 5) ? v : 0;
+    });
+    payload.criteria = criteria;
 
     return payload;
   }

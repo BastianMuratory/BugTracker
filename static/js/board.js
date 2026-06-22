@@ -21,6 +21,21 @@
   function columnByProject(name) {
     return board.querySelector('.column[data-project="' + cssEsc(name) + '"]');
   }
+  // Colonne fixe « non assigné » correspondant à une nature (bug / feature).
+  // Il existe désormais deux colonnes sans projet, séparées par nature.
+  function unassignedColumnFor(kind) {
+    return board.querySelector('.column[data-fixed][data-kind="' + cssEsc(kind || "bug") + '"]');
+  }
+  // Un dépôt est autorisé si la colonne cible n'est pas une colonne fixe typée,
+  // ou si la nature de la carte correspond à celle de la colonne fixe.
+  function canDropIn(card, col) {
+    if (!col) return false;
+    const colKind = col.getAttribute("data-kind");
+    if (col.hasAttribute("data-fixed") && colKind) {
+      return (card.getAttribute("data-kind") || "bug") === colKind;
+    }
+    return true;
+  }
   function cssEsc(s) {
     if (window.CSS && CSS.escape) return CSS.escape(s);
     return String(s).replace(/["\\]/g, "\\$&");
@@ -43,6 +58,7 @@
     card.setAttribute("draggable", "true");
     card.setAttribute("data-id", bug.id);
     card.setAttribute("data-type", bug.type || "");
+    card.setAttribute("data-kind", bug.kind || "bug");
     const kw = Array.isArray(bug.keywords) ? bug.keywords.join(" ") : "";
     card.setAttribute("data-search",
       (bug.id + " " + (bug.name || "") + " " + kw).toLowerCase());
@@ -119,6 +135,11 @@
   board.addEventListener("dragover", function (e) {
     const body = e.target.closest(".col-body");
     if (!body || !dragged) return;
+    const col = body.closest(".column");
+    // Sur une colonne fixe typée (Bugs / Feature non assignée), n'autorise le
+    // dépôt que si la nature de la carte correspond : sinon on ne preventDefault
+    // pas, ce qui interdit le drop et affiche le curseur « interdit ».
+    if (!canDropIn(dragged, col)) return;
     e.preventDefault();
     if (e.dataTransfer) e.dataTransfer.dropEffect = "move";
     body.classList.add("drag-over");
@@ -137,9 +158,13 @@
     e.preventDefault();
     body.classList.remove("drag-over");
     const targetCol = body.closest(".column");
-    if (targetCol && dragged.closest(".column") !== targetCol) {
-      moveCardTo(dragged, targetCol);
+    if (!targetCol || dragged.closest(".column") === targetCol) return;
+    if (!canDropIn(dragged, targetCol)) {
+      const kind = dragged.getAttribute("data-kind") === "feature" ? "Les features" : "Les bugs";
+      showToast(kind + " ne peuvent pas aller dans cette colonne.", "error");
+      return;
     }
+    moveCardTo(dragged, targetCol);
   });
 
   /* -------------------------------------------------- Couche flottante (popover/menu) */
@@ -182,6 +207,8 @@
   /* ------------------------------------------- Popover « ajouter un bug » */
   function openAddBugPopover(anchor, col) {
     const project = col.getAttribute("data-project");
+    // Colonne fixe typée : on ne propose que les éléments de la bonne nature.
+    const colKind = col.hasAttribute("data-fixed") ? col.getAttribute("data-kind") : "";
     const pop = document.createElement("div");
     pop.className = "popover";
     pop.innerHTML =
@@ -195,6 +222,7 @@
     function render() {
       const q = input.value.trim().toLowerCase();
       const items = BUGS.filter(function (b) {
+        if (colKind && (b.kind || "bug") !== colKind) return false; // mauvaise nature
         if ((projectOf[b.id] || "") === project) return false; // déjà dans la colonne
         if (!q) return true;
         return b.id.toLowerCase().indexOf(q) !== -1 ||
@@ -245,6 +273,7 @@
     left:  '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>',
     right: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg>',
     pencil:'<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>',
+    calendar:'<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
     archive:'<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="4" rx="1"/><path d="M5 8v11a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8M10 12h4"/></svg>',
     trash: '<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M6 7l1 13a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-13"/></svg>',
   };
@@ -302,6 +331,7 @@
       item("right", "Décaler à droite", ICO.right, isLast, false) +
       '<div class="menu-sep"></div>' +
       item("rename", "Renommer", ICO.pencil, false, false) +
+      item("dates", "Dates…", ICO.calendar, false, false) +
       item("archive", "Archiver", ICO.archive, false, false) +
       '<div class="menu-sep"></div>' +
       item("delete", "Supprimer", ICO.trash, false, true);
@@ -310,14 +340,85 @@
       const b = e.target.closest("button[data-act]");
       if (!b || b.disabled) return;
       const act = b.getAttribute("data-act");
+      const anchorBtn = anchor;
       closeFloating();
       if (act === "left") moveColumn(col, -1);
       else if (act === "right") moveColumn(col, 1);
       else if (act === "rename") startRename(col);
+      else if (act === "dates") openDatesPopover(anchorBtn, col);
       else if (act === "archive") archiveColumn(col);
       else if (act === "delete") deleteColumn(col);
     });
     openFloating(menu, anchor);
+  }
+
+  /* ---------------------------------------- Dates de début / fin d'un projet */
+  function fmtEu(iso) {
+    if (!iso || iso.length !== 10) return "";
+    return iso.slice(8, 10) + "/" + iso.slice(5, 7) + "/" + iso.slice(0, 4);
+  }
+
+  // Met à jour la ligne de dates affichée sous le titre d'une colonne projet.
+  function renderColDates(col) {
+    const el = col.querySelector(".col-dates");
+    if (!el) return;
+    const s = fmtEu(col.getAttribute("data-start"));
+    const e = fmtEu(col.getAttribute("data-end"));
+    const txt = el.querySelector(".col-dates-text");
+    if (!s && !e) {
+      el.style.display = "none";
+      if (txt) txt.textContent = "";
+      return;
+    }
+    el.style.display = "";
+    if (txt) txt.textContent = (s || "…") + " → " + (e || "…");
+  }
+
+  async function saveDates(col, start, end) {
+    const name = col.getAttribute("data-project");
+    if (start && end && end < start) {
+      showToast("La date de fin précède la date de début.", "error");
+      return;
+    }
+    try {
+      const res = await api("POST", "/api/projects/dates",
+        { name: name, start_date: start, end_date: end });
+      col.setAttribute("data-start", (res && res.start_date) || "");
+      col.setAttribute("data-end", (res && res.end_date) || "");
+      renderColDates(col);
+      showToast("Dates mises à jour.", "success");
+    } catch (err) {
+      showToast(err.message || "Échec de l'enregistrement.", "error");
+    }
+  }
+
+  function openDatesPopover(anchor, col) {
+    const name = col.getAttribute("data-project");
+    const start = col.getAttribute("data-start") || "";
+    const end = col.getAttribute("data-end") || "";
+    const pop = document.createElement("div");
+    pop.className = "popover dates-pop";
+    pop.innerHTML =
+      '<div class="pop-title">Dates de « ' + escapeHtml(name) + ' »</div>' +
+      '<label class="dates-field">Début' +
+        '<input type="date" class="d-start" value="' + escapeHtml(start) + '"></label>' +
+      '<label class="dates-field">Fin' +
+        '<input type="date" class="d-end" value="' + escapeHtml(end) + '"></label>' +
+      '<div class="dates-actions">' +
+        '<button type="button" class="btn btn-sm dates-clear">Effacer</button>' +
+        '<button type="button" class="btn btn-primary btn-sm dates-save">Enregistrer</button>' +
+      '</div>';
+    const sEl = pop.querySelector(".d-start");
+    const eEl = pop.querySelector(".d-end");
+    pop.querySelector(".dates-clear").addEventListener("click", function () {
+      sEl.value = ""; eEl.value = "";
+    });
+    pop.querySelector(".dates-save").addEventListener("click", function () {
+      const s = sEl.value, e = eEl.value;
+      closeFloating();
+      saveDates(col, s, e);
+    });
+    openFloating(pop, anchor);
   }
 
   function startRename(col) {
@@ -363,19 +464,22 @@
     const cards = bodyOf(col).querySelectorAll(".bcard");
     const msg = cards.length
       ? "Supprimer la colonne « " + name + " » ?\nSes " + cards.length +
-        " bug(s) repasseront en « Non assigné »."
+        " élément(s) repasseront en « non assigné »."
       : "Supprimer la colonne « " + name + " » ?";
     if (!window.confirm(msg)) return;
 
-    const unassigned = columnByProject("");
-    if (unassigned) {
-      const body = bodyOf(unassigned);
-      Array.prototype.forEach.call(cards, function (card) {
+    const touched = [];
+    Array.prototype.forEach.call(cards, function (card) {
+      const kind = card.getAttribute("data-kind") || "bug";
+      const target = unassignedColumnFor(kind);
+      if (target) {
+        const body = bodyOf(target);
         body.insertBefore(card, body.querySelector(".col-empty"));
         projectOf[card.getAttribute("data-id")] = "";
-      });
-      updateColumn(unassigned);
-    }
+        if (touched.indexOf(target) === -1) touched.push(target);
+      }
+    });
+    touched.forEach(updateColumn);
     col.remove();
 
     try {
@@ -417,6 +521,10 @@
           '<button type="button" class="icon-btn col-menu" title="Options de la colonne" aria-label="Options de la colonne">' +
             '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="5" r="1"/><circle cx="12" cy="12" r="1"/><circle cx="12" cy="19" r="1"/></svg></button>' +
         "</div>" +
+      "</div>" +
+      '<div class="col-dates" style="display:none">' +
+        '<svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>' +
+        '<span class="col-dates-text"></span>' +
       "</div>" +
       '<div class="col-body"><div class="col-empty">Déposez des éléments ici.</div></div>';
     return col;
@@ -464,9 +572,9 @@
     });
   }
 
-  /* ---------------------------- Recherche dans la colonne « Non assigné » */
-  const colSearch = board.querySelector(".col-search-input");
-  if (colSearch) {
+  /* ------------- Recherche à l'intérieur des colonnes fixes (non assigné) */
+  // Il existe deux colonnes fixes (bugs / features) : on câble chaque champ.
+  board.querySelectorAll(".col-search-input").forEach(function (colSearch) {
     const fixedCol = colSearch.closest(".column");
     const fixedBody = bodyOf(fixedCol);
     const emptyEl = fixedBody.querySelector(".col-empty");
@@ -491,7 +599,7 @@
         }
       }
     });
-  }
+  });
 
   // initialise les compteurs / états vides
   board.querySelectorAll(".column").forEach(updateColumn);

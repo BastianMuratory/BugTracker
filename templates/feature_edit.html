@@ -32,35 +32,62 @@
     <!-- Colonne principale : description fonctionnelle + occurrences -->
     <div>
       <section class="panel">
-        <div class="field">
-          <label for="f-problem">Problème à résoudre <span class="hint">(quel est le besoin utilisateur ?)</span></label>
-          <textarea id="f-problem" data-field="problem"
-                    placeholder="Quel manque, quelle douleur ou quel besoin cette feature adresse-t-elle ?">{{ '' if is_new else (feature.problem or '') }}</textarea>
-        </div>
-        <div class="field">
-          <label for="f-description">Description de la feature</label>
-          <textarea id="f-description" data-field="description"
-                    placeholder="En quoi consiste cette nouvelle fonctionnalité ?">{{ '' if is_new else (feature.description or '') }}</textarea>
-        </div>
-        <div class="field">
-          <label for="f-nas_link">Lien NAS <span class="hint">(dossier ou fichier partagé pour cette feature)</span></label>
-          <input type="text" id="f-nas_link" class="nas" data-field="nas_link"
-                 placeholder="\\nas\features\FEAT-XXX\…" value="{{ '' if is_new else (feature.nas_link or '') }}">
-        </div>
-        <div class="field">
-          <label for="f-benefit">Bénéfice attendu <span class="hint">(gain de temps, revenus, satisfaction client, conformité, etc.)</span></label>
-          <textarea id="f-benefit" data-field="benefit"
-                    placeholder="Quel gain concret apporte cette feature ?">{{ '' if is_new else (feature.benefit or '') }}</textarea>
-        </div>
-        <div class="field">
-          <label for="f-functional_description">Description fonctionnelle <span class="hint">(que doit faire le système ?)</span></label>
-          <textarea id="f-functional_description" data-field="functional_description"
-                    placeholder="Comportement attendu du système, écrans, règles métier…">{{ '' if is_new else (feature.functional_description or '') }}</textarea>
-        </div>
-        <div class="field">
-          <label for="f-acceptance_criteria">Critères d'acceptation <span class="hint">(comment savoir que la fonctionnalité est terminée ?)</span></label>
-          <textarea id="f-acceptance_criteria" data-field="acceptance_criteria"
-                    placeholder="Conditions vérifiables qui prouvent que la feature est faite.">{{ '' if is_new else (feature.acceptance_criteria or '') }}</textarea>
+        <div class="desc-with-criteria">
+          <div class="criteria-col">
+            <div class="side-title">Critères <span class="hint">(note de 1 à 5)</span></div>
+            {% set crit = (feature.criteria or {}) if not is_new else {} %}
+            {% set criteria_labels = [
+                ('product_importance', 'Importance produit'),
+                ('be_importance', 'Importance BE'),
+                ('users_impacted', "Nombre d'utilisateurs impactés"),
+                ('urgency', 'Urgence'),
+                ('tech_effort', 'Effort technique')
+              ] %}
+            {% for key, label in criteria_labels %}
+            <div class="criterion">
+              <div class="criterion-label">{{ label }}</div>
+              <div class="rating" role="group" aria-label="{{ label }} (note de 1 à 5)">
+                <input type="hidden" data-criterion="{{ key }}" value="{{ crit.get(key, 0) }}">
+                {% for n in [1, 2, 3, 4, 5] %}
+                <button type="button" data-val="{{ n }}" aria-pressed="false" aria-label="{{ n }} sur 5">{{ n }}</button>
+                {% endfor %}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+
+          <div class="desc-col">
+            <div class="field">
+              <label for="f-problem">Problème à résoudre <span class="hint">(quel est le besoin utilisateur ?)</span></label>
+              <textarea id="f-problem" data-field="problem"
+                        placeholder="Quel manque, quelle douleur ou quel besoin cette feature adresse-t-elle ?">{{ '' if is_new else (feature.problem or '') }}</textarea>
+            </div>
+            <div class="field">
+              <label for="f-description">Description de la feature</label>
+              <textarea id="f-description" data-field="description"
+                        placeholder="En quoi consiste cette nouvelle fonctionnalité ?">{{ '' if is_new else (feature.description or '') }}</textarea>
+            </div>
+            <div class="field">
+              <label for="f-nas_link">Lien NAS <span class="hint">(dossier ou fichier partagé pour cette feature)</span></label>
+              <input type="text" id="f-nas_link" class="nas" data-field="nas_link"
+                     placeholder="\\nas\features\FEAT-XXX\…" value="{{ '' if is_new else (feature.nas_link or '') }}">
+            </div>
+            <div class="field">
+              <label for="f-benefit">Bénéfice attendu <span class="hint">(gain de temps, revenus, satisfaction client, conformité, etc.)</span></label>
+              <textarea id="f-benefit" data-field="benefit"
+                        placeholder="Quel gain concret apporte cette feature ?">{{ '' if is_new else (feature.benefit or '') }}</textarea>
+            </div>
+            <div class="field">
+              <label for="f-functional_description">Description fonctionnelle <span class="hint">(que doit faire le système ?)</span></label>
+              <textarea id="f-functional_description" data-field="functional_description"
+                        placeholder="Comportement attendu du système, écrans, règles métier…">{{ '' if is_new else (feature.functional_description or '') }}</textarea>
+            </div>
+            <div class="field">
+              <label for="f-acceptance_criteria">Critères d'acceptation <span class="hint">(comment savoir que la fonctionnalité est terminée ?)</span></label>
+              <textarea id="f-acceptance_criteria" data-field="acceptance_criteria"
+                        placeholder="Conditions vérifiables qui prouvent que la feature est faite.">{{ '' if is_new else (feature.acceptance_criteria or '') }}</textarea>
+            </div>
+          </div>
         </div>
       </section>
 

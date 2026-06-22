@@ -21,7 +21,7 @@
     <nav class="nav-links">
       <a href="{{ url_for('bugs_page') }}" class="{{ 'active' if request.endpoint in ['bugs_page','bug_edit','bug_new'] else '' }}">Bugs</a>
       <a href="{{ url_for('features_page') }}" class="{{ 'active' if request.endpoint in ['features_page','feature_edit','feature_new'] else '' }}">Features</a>
-      <a href="{{ url_for('board_page') }}" class="{{ 'active' if request.endpoint == 'board_page' else '' }}">Tableau</a>
+      <a href="{{ url_for('board_page') }}" class="{{ 'active' if request.endpoint == 'board_page' else '' }}">Projets</a>
       <a href="{{ url_for('archived_page') }}" class="{{ 'active' if request.endpoint == 'archived_page' else '' }}">Archives</a>
     </nav>
     <div class="nav-actions">

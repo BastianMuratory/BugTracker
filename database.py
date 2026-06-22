@@ -82,6 +82,17 @@ TEXT_FIELDS = list(dict.fromkeys(BUG_TEXT_FIELDS + FEATURE_TEXT_FIELDS))
 
 OCC_FIELDS = ["location", "person", "system", "date"]
 
+# Critères d'évaluation (note de 1 à 5 ; 0 = non noté). Communs aux bugs et aux
+# features, ils permettent de pondérer / prioriser un élément. Stockés dans un
+# sous-dictionnaire "criteria".
+CRITERIA_FIELDS = [
+    "product_importance",   # Importance produit
+    "be_importance",        # Importance BE (bureau d'études)
+    "users_impacted",       # Nombre d'utilisateurs impactés
+    "urgency",              # Urgence
+    "tech_effort",          # Effort technique
+]
+
 UPLOADS_DIR = DATA_DIR / "uploads"
 IMAGE_EXTENSIONS = {"png", "jpg", "jpeg", "gif", "webp"}
 
@@ -109,7 +120,8 @@ def _locked():
 
 
 def _default_data():
-    return {"meta": {"version": 1}, "projects": [], "archived_projects": [], "bugs": []}
+    return {"meta": {"version": 1}, "projects": [], "archived_projects": [],
+            "project_meta": {}, "bugs": []}
 
 
 def _read():
@@ -127,6 +139,9 @@ def _read():
     data.setdefault("meta", {"version": 1})
     data.setdefault("projects", [])
     data.setdefault("archived_projects", [])
+    data.setdefault("project_meta", {})
+    if not isinstance(data["project_meta"], dict):
+        data["project_meta"] = {}
     data.setdefault("bugs", [])
     _migrate_bugs(data["bugs"])
     return data
@@ -172,6 +187,10 @@ def _migrate_bugs(bugs):
         if b.get("kind") == "feature":
             for fld in FEATURE_TEXT_FIELDS:
                 b.setdefault(fld, "")
+
+        # Critères d'évaluation (note 1-5 ; 0 = non noté). Normalisés pour que
+        # tout élément possède les cinq clés, qu'il soit ancien ou récent.
+        b["criteria"] = _clean_criteria(b.get("criteria"))
 
 
 def _write(data):
@@ -251,6 +270,35 @@ def _clean_occurrences(value):
     return out
 
 
+def _clean_criteria(value):
+    """Normalise les critères : un dict {clé: note} avec les cinq clés connues.
+
+    Chaque note est un entier de 1 à 5 ; toute valeur absente, hors bornes ou
+    illisible est ramenée à 0 (« non noté »). Les clés inconnues sont ignorées.
+    """
+    out = {k: 0 for k in CRITERIA_FIELDS}
+    if isinstance(value, dict):
+        for k in CRITERIA_FIELDS:
+            try:
+                n = int(value.get(k, 0))
+            except (TypeError, ValueError):
+                n = 0
+            out[k] = n if 1 <= n <= 5 else 0
+    return out
+
+
+def _clean_date(value):
+    """Valide une date ISO (AAAA-MM-JJ). Renvoie "" si le format est invalide."""
+    v = str(value or "").strip()
+    if len(v) == 10 and v[4] == "-" and v[7] == "-":
+        y, m, d = v[0:4], v[5:7], v[8:10]
+        if y.isdigit() and m.isdigit() and d.isdigit():
+            mo, da = int(m), int(d)
+            if 1 <= mo <= 12 and 1 <= da <= 31:
+                return v
+    return ""
+
+
 def _normalize(payload, base=None):
     """Fusionne un payload dans un bug (liste blanche de champs + validation)."""
     bug = dict(base or {})
@@ -278,6 +326,8 @@ def _normalize(payload, base=None):
         bug["occurrences"] = _clean_occurrences(payload.get("occurrences"))
     if "images" in payload:
         bug["images"] = _clean_images(payload.get("images"))
+    if "criteria" in payload:
+        bug["criteria"] = _clean_criteria(payload.get("criteria"))
     return bug
 
 
@@ -343,6 +393,7 @@ def _create(payload, kind):
             bug.setdefault(fld, "")
         bug.setdefault("occurrences", [])
         bug.setdefault("images", [])
+        bug.setdefault("criteria", _clean_criteria(None))
         bug["created_at"] = _now()
         bug["updated_at"] = bug["created_at"]
         _ensure_project(data, bug["project"])
@@ -372,6 +423,7 @@ def update_bug(bug_id, payload):
                 merged.setdefault("keywords", b.get("keywords", []))
                 merged.setdefault("occurrences", b.get("occurrences", []))
                 merged.setdefault("images", b.get("images", []))
+                merged.setdefault("criteria", b.get("criteria") or _clean_criteria(None))
                 merged.setdefault("kind", b.get("kind", DEFAULT_KIND))
                 data["bugs"][i] = merged
                 _ensure_project(data, merged.get("project", ""))
@@ -581,6 +633,10 @@ def rename_project(old, new):
             if p not in seen:
                 seen.append(p)
         data["projects"] = seen
+        # Suit le renommage côté métadonnées (dates de début/fin).
+        pmeta = data.setdefault("project_meta", {})
+        if old in pmeta and old != new:
+            pmeta[new] = pmeta.pop(old)
         for b in data["bugs"]:
             if (b.get("project") or "") == old:
                 b["project"] = new
@@ -597,6 +653,7 @@ def delete_project(name):
         name = (name or "").strip()
         data["projects"] = [p for p in data["projects"] if p != name]
         data["archived_projects"] = [p for p in data.get("archived_projects", []) if p != name]
+        data.get("project_meta", {}).pop(name, None)
         for b in data["bugs"]:
             if (b.get("project") or "") == name:
                 b["project"] = ""
@@ -619,6 +676,38 @@ def reorder_projects(order):
         return data["projects"]
 
 
+def get_project_meta():
+    """Métadonnées des projets (dates de début/fin), indexées par nom de projet.
+
+    Forme : { "Release 1.0": {"start_date": "AAAA-MM-JJ", "end_date": "..."} }.
+    """
+    with _locked():
+        return dict(_read().get("project_meta", {}))
+
+
+def set_project_dates(name, start_date, end_date):
+    """Définit (ou efface) les dates de début/fin d'un projet.
+
+    Les dates sont validées au format ISO (AAAA-MM-JJ). Si les deux sont vides,
+    l'entrée est retirée. Renvoie un dict {name, start_date, end_date} ou None si
+    le nom est invalide.
+    """
+    with _locked():
+        data = _read()
+        name = (name or "").strip()
+        if not name:
+            return None
+        start = _clean_date(start_date)
+        end = _clean_date(end_date)
+        meta = data.setdefault("project_meta", {})
+        if start or end:
+            meta[name] = {"start_date": start, "end_date": end}
+        else:
+            meta.pop(name, None)
+        _write(data)
+        return {"name": name, "start_date": start, "end_date": end}
+
+
 # --------------------------------------------------------------------------- #
 # Données d'exemple (au premier lancement, pour ne pas démarrer sur du vide).
 # Pour repartir de zéro : arrêter l'app, vider data/bugs.json en mettant
@@ -630,6 +719,10 @@ def _seed_data():
         "meta": {"version": 1},
         "projects": ["Release 1.0", "Release 1.1"],
         "archived_projects": [],
+        "project_meta": {
+            "Release 1.0": {"start_date": "2026-06-01", "end_date": "2026-06-30"},
+            "Release 1.1": {"start_date": "2026-07-01", "end_date": "2026-08-15"},
+        },
         "bugs": [
             {
                 "id": "BUG-001",
@@ -651,6 +744,8 @@ def _seed_data():
                 "frequency": "Systématique",
                 "nas_link": "\\\\nas\\bugs\\BUG-001\\",
                 "images": [],
+                "criteria": {"product_importance": 5, "be_importance": 4,
+                             "users_impacted": 5, "urgency": 5, "tech_effort": 3},
                 "occurrences": [
                     {
                         "id": "a1b2c3d4",
@@ -688,6 +783,8 @@ def _seed_data():
                 "frequency": "Fréquent",
                 "nas_link": "",
                 "images": [],
+                "criteria": {"product_importance": 4, "be_importance": 2,
+                             "users_impacted": 3, "urgency": 3, "tech_effort": 2},
                 "occurrences": [],
                 "created_at": now,
                 "updated_at": now,
@@ -716,6 +813,8 @@ def _seed_data():
                                        "focus ; le raccourci n'entre pas en conflit avec "
                                        "ceux du navigateur.",
                 "images": [],
+                "criteria": {"product_importance": 3, "be_importance": 3,
+                             "users_impacted": 4, "urgency": 2, "tech_effort": 2},
                 "occurrences": [],
                 "created_at": now,
                 "updated_at": now,
@@ -736,6 +835,8 @@ def _seed_data():
                 "frequency": "Systématique",
                 "nas_link": "",
                 "images": [],
+                "criteria": {"product_importance": 1, "be_importance": 1,
+                             "users_impacted": 2, "urgency": 1, "tech_effort": 1},
                 "occurrences": [],
                 "created_at": now,
                 "updated_at": now,

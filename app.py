@@ -28,6 +28,7 @@ API JSON :
   DELETE /api/(bugs|features)/<id>/images/<file> -> retire une image d'un élément
   POST   /api/projects         -> crée une colonne/projet
   POST   /api/projects/rename  -> renomme une colonne/projet
+  POST   /api/projects/dates   -> définit les dates de début/fin d'un projet
   POST   /api/projects/delete  -> supprime une colonne/projet
   POST   /api/projects/archive -> archive un projet (le retire du tableau)
   POST   /api/projects/restore -> désarchive un projet
@@ -270,16 +271,26 @@ def feature_edit(feature_id):
 def board_page():
     bugs = db.list_all_items()
     projects = db.list_projects()
+    meta = db.get_project_meta()
 
     columns = []
-    # Colonne "Non assigné" (fixe) : reçoit les éléments sans projet et sert de
-    # source/cible de glisser-déposer.
+    # Deux colonnes fixes pour les éléments sans projet, séparées par nature :
+    # les bugs d'un côté, les features de l'autre. Elles servent aussi de
+    # source / cible de glisser-déposer (la nature de la carte doit correspondre
+    # à la colonne fixe ciblée).
     unassigned = [b for b in bugs if not (b.get("project") or "").strip()]
-    columns.append({"name": "", "label": "Non assigné", "fixed": True,
-                    "bugs": _sort_bugs(unassigned)})
+    unassigned_bugs = [b for b in unassigned if b.get("kind", "bug") != "feature"]
+    unassigned_features = [b for b in unassigned if b.get("kind") == "feature"]
+    columns.append({"name": "", "label": "Bugs non assignée", "fixed": True,
+                    "kind": "bug", "bugs": _sort_bugs(unassigned_bugs)})
+    columns.append({"name": "", "label": "Feature non assignée", "fixed": True,
+                    "kind": "feature", "bugs": _sort_bugs(unassigned_features)})
     for p in projects:
         col_bugs = [b for b in bugs if (b.get("project") or "").strip() == p]
-        columns.append({"name": p, "label": p, "fixed": False,
+        pm = meta.get(p, {})
+        columns.append({"name": p, "label": p, "fixed": False, "kind": "",
+                        "start_date": pm.get("start_date", ""),
+                        "end_date": pm.get("end_date", ""),
                         "bugs": _sort_bugs(col_bugs)})
 
     # Index léger pour la recherche "ajouter un point" + filtre de colonne.
@@ -431,6 +442,17 @@ def api_rename_project():
     if not db.rename_project(p.get("old", ""), p.get("new", "")):
         return jsonify({"error": "Renommage impossible"}), 400
     return jsonify({"ok": True})
+
+
+@app.post("/api/projects/dates")
+def api_project_dates():
+    p = _payload()
+    res = db.set_project_dates(
+        p.get("name", ""), p.get("start_date", ""), p.get("end_date", "")
+    )
+    if not res:
+        return jsonify({"error": "Projet invalide"}), 400
+    return jsonify(res)
 
 
 @app.post("/api/projects/delete")

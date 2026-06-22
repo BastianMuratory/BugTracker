@@ -33,12 +33,21 @@ Aucune dépendance front-end externe : l'interface fonctionne hors-ligne, sans C
 - Les dates sont au **format européen JJ/MM/AAAA** (saisie et affichage ; elles
   restent stockées en ISO dans le fichier). Le champ **Projet** suggère
   uniquement les projets actifs (non archivés).
-- **Tableau / Kanban** (`/board`) — colonnes = releases / projets. **Bugs et
+- **Critères d'évaluation** — sur la fiche d'un bug ou d'une feature, un panneau
+  affiché **à gauche des descriptions** permet de noter de **1 à 5** cinq
+  critères : *Importance produit*, *Importance BE*, *Nombre d'utilisateurs
+  impactés*, *Urgence* et *Effort technique* (0 = non noté). Communs aux bugs et
+  aux features.
+- **Projets / Kanban** (`/board`) — colonnes = releases / projets. **Bugs et
   features y sont mélangés et traités de la même façon** (mêmes cartes, même
-  glisser-déposer). Recherche dans la colonne « Non assigné » (par ID, titre
-  **et mots-clés**), ajout d'un élément à une colonne par recherche, création de
-  colonnes, et un menu « ⋯ » par colonne pour la **décaler à gauche/droite**, la
-  renommer, l'**archiver** ou la supprimer.
+  glisser-déposer). Les éléments **sans projet** sont répartis dans **deux
+  colonnes fixes séparées par nature** : « Bugs non assignée » et « Feature non
+  assignée » (une carte ne peut être déposée que dans la colonne fixe de sa
+  nature). Recherche dans ces colonnes (par ID, titre **et mots-clés**), ajout
+  d'un élément à une colonne par recherche, création de colonnes, et un menu
+  « ⋯ » par colonne pour la **décaler à gauche/droite**, la renommer, définir ses
+  **dates de début / fin**, l'**archiver** ou la supprimer. Les dates d'un projet
+  s'affichent sous le titre de sa colonne.
 - **Archives** (`/archived`) — projets terminés et archivés, avec leurs bugs et
   features ; chaque projet peut être **restauré** ou supprimé.
 - **Sauvegarde** : bouton « Sauvegarde » qui télécharge la base JSON.
@@ -154,6 +163,9 @@ Structure :
   "meta": { "version": 1 },
   "projects": ["Release 1.0", "Release 1.1"],
   "archived_projects": [],
+  "project_meta": {
+    "Release 1.0": { "start_date": "2026-06-01", "end_date": "2026-06-30" }
+  },
   "bugs": [
     {
       "id": "BUG-001",
@@ -171,6 +183,10 @@ Structure :
       "conditions": "…",
       "frequency": "…",
       "images": ["3f9a1c2b8e7d4a56.png"],
+      "criteria": {
+        "product_importance": 5, "be_importance": 4, "users_impacted": 5,
+        "urgency": 5, "tech_effort": 3
+      },
       "occurrences": [
         { "id": "a1b2c3d4", "location": "…", "person": "…",
           "system": "…", "date": "2026-05-12" }
@@ -194,6 +210,10 @@ Structure :
       "functional_description": "…",
       "acceptance_criteria": "…",
       "images": [],
+      "criteria": {
+        "product_importance": 3, "be_importance": 3, "users_impacted": 4,
+        "urgency": 2, "tech_effort": 2
+      },
       "occurrences": [],
       "created_at": "…",
       "updated_at": "…"
@@ -209,6 +229,9 @@ Structure :
 > `ÉLEVÉE`/`MOYENNE`/`FAIBLE`. (Les bases plus anciennes encore — sans lien NAS
 > unique ni images — sont également migrées : le lien NAS d'une ancienne
 > occurrence est repris au niveau de l'élément, `images` est initialisé à vide.)
+> Enfin, tout élément reçoit un bloc **`criteria`** (les cinq critères à 0 par
+> défaut) s'il n'en a pas, et la base reçoit un dictionnaire **`project_meta`**
+> (vide par défaut) pour les dates de début / fin des projets.
 
 ### Sauvegarder
 

@@ -1,18 +1,18 @@
 {% extends "base.html" %}
-{% block title %}Tableau — Bugtrack{% endblock %}
+{% block title %}Projets — Bugtrack{% endblock %}
 {% block main_class %}board-main{% endblock %}
 
 {% block content %}
 <div class="board-head">
   <div>
-    <h1>Tableau</h1>
+    <h1>Projets</h1>
     <div class="sub">Glissez-déposez les cartes entre les colonnes pour les classer par release / projet.</div>
   </div>
 </div>
 
 <div class="board" id="board">
   {% for col in columns %}
-  <section class="column" data-project="{{ col.name }}"{% if col.fixed %} data-fixed="1"{% endif %}>
+  <section class="column" data-project="{{ col.name }}"{% if col.fixed %} data-fixed="1"{% endif %}{% if col.kind %} data-kind="{{ col.kind }}"{% endif %}{% if col.start_date %} data-start="{{ col.start_date }}"{% endif %}{% if col.end_date %} data-end="{{ col.end_date }}"{% endif %}>
     <div class="col-head">
       <div class="col-title">
         <span class="col-name {{ 'fixed' if col.fixed else '' }}" title="{{ col.label }}">{{ col.label }}</span>
@@ -29,14 +29,20 @@
         {% endif %}
       </div>
     </div>
+    {% if not col.fixed %}
+    <div class="col-dates"{% if not (col.start_date or col.end_date) %} style="display:none"{% endif %}>
+      <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="17" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      <span class="col-dates-text">{{ (col.start_date | eudate) if col.start_date else '…' }} → {{ (col.end_date | eudate) if col.end_date else '…' }}</span>
+    </div>
+    {% endif %}
     {% if col.fixed %}
     <div class="col-search">
-      <input type="text" class="col-search-input" placeholder="Filtrer dans « Non assigné »…" autocomplete="off">
+      <input type="text" class="col-search-input" placeholder="Filtrer dans « {{ col.label }} »…" autocomplete="off">
     </div>
     {% endif %}
     <div class="col-body">
       {% for b in col.bugs %}
-      <div class="bcard" draggable="true" data-id="{{ b.id }}" data-type="{{ b.type }}"
+      <div class="bcard" draggable="true" data-id="{{ b.id }}" data-type="{{ b.type }}" data-kind="{{ b.kind }}"
            data-search="{{ (b.id ~ ' ' ~ b.name ~ ' ' ~ (b.keywords | join(' '))) | lower }}">
         <div class="bcard-top">
           <span class="bid">{{ b.id }}</span>
